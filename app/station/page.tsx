@@ -343,7 +343,7 @@ function Dashboard() {
             <BasicCard title="" className="hidden md:block col-span-2 w-[99%]">
               <div className="flex flex-col gap-2 px-6 w-[100%]">
                 Callouts per category
-                <Pie data={dataPie} options={pieSettings} title="Test" />
+                <Pie data={dataPie} title="Test" />
                 Number of callouts each month
                 <Bar data={dataBar} options={barSettings} />
               </div>
