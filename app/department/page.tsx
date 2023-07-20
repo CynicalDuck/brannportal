@@ -169,7 +169,7 @@ export default function Department({ children, ...props }: Props) {
   );
 }
 
-export function Dashboard({ children, ...props }: Props) {
+function Dashboard({ children, ...props }: Props) {
   // Variables
   const dataPie = {
     labels: [
@@ -355,7 +355,7 @@ export function Dashboard({ children, ...props }: Props) {
   );
 }
 
-export function Callouts({ children, ...props }: Props) {
+function Callouts({ children, ...props }: Props) {
   return (
     <div className="w-full flex justify-center justify-items-center">
       <TableCallout title={"Department callouts"} />
@@ -363,7 +363,7 @@ export function Callouts({ children, ...props }: Props) {
   );
 }
 
-export function Stations({ children, ...props }: Props) {
+function Stations({ children, ...props }: Props) {
   return (
     <div className="w-full flex justify-center justify-items-center">
       <TableStation />
@@ -371,7 +371,7 @@ export function Stations({ children, ...props }: Props) {
   );
 }
 
-export function Vehicles({ children, ...props }: Props) {
+function Vehicles({ children, ...props }: Props) {
   return (
     <div className="w-full flex justify-center justify-items-center">
       <TableVehicle />
@@ -379,7 +379,7 @@ export function Vehicles({ children, ...props }: Props) {
   );
 }
 
-export function Settings({ children, ...props }: Props) {
+function Settings({ children, ...props }: Props) {
   return (
     <div className="w-full">
       <div className="flex flex-col gap-4">
