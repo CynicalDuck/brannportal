@@ -13,11 +13,8 @@ import BasicButton from "../../../components/Buttons/BasicButton";
 // Import hooks
 
 // Types
-interface LoginProps {
-  children?: React.ReactNode;
-}
 
-export default function Login({ children, ...props }: LoginProps) {
+export default function Login({ ...props }) {
   // States
   const [signUp, setSignUp] = useState(false);
   const [fortgotPassword, setForgotPassword] = useState(false);
