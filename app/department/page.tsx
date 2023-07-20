@@ -8,9 +8,9 @@ import {
   Box,
   PlusCircle,
   BarChart,
-  Key,
+  Home,
   GitMerge,
-  FileText,
+  Settings as SettingsIcon,
   Users,
   Navigation,
   Truck,
@@ -82,24 +82,26 @@ export default function Department() {
             <div>NRBR</div>
           </div>
         </div>
-        <div className="lg:flex lg:justify-end lg:grow lg:gap-2">
-          <BasicButton state="default" className="">
-            <div className="">
-              <div className="flex flex-row gap-2">
-                <PlusCircle /> <div>Create new</div>
-              </div>
-            </div>
-          </BasicButton>
-          <BasicButton state="default" className="">
-            <div className="">
-              <div className="flex flex-row gap-2">
-                <GitMerge /> <div>Join new</div>
-              </div>
-            </div>
-          </BasicButton>
+        <div className="md:hidden">
+          <Select onValueChange={(e) => window.location.assign(e)}>
+            <SelectTrigger className="w-full mt-2">
+              <SelectValue placeholder="Menu" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                <SelectLabel>Pages</SelectLabel>
+                <SelectItem value="/">Home</SelectItem>
+                <SelectItem value="department" disabled>
+                  Department
+                </SelectItem>
+                <SelectItem value="station">Station</SelectItem>
+                <SelectItem value="settings">Settings</SelectItem>
+              </SelectGroup>
+            </SelectContent>
+          </Select>
         </div>
       </div>
-      <div className="md:flex md:flex-row md:gap-2 md:mt-5 hidden md:block text-xs">
+      <div className="flex flex-row gap-2 mt-5 text-xs">
         <BasicButton
           state="default"
           className={active === "Dashboard" ? "bg-indigo-600" : "bg-indigo-400"}
@@ -107,7 +109,8 @@ export default function Department() {
         >
           <div className="">
             <div className="flex flex-row gap-2">
-              <div>Dashboard</div>
+              <Home size={14} />
+              <div className="hidden md:block">Dashboard</div>
             </div>
           </div>
         </BasicButton>
@@ -118,7 +121,8 @@ export default function Department() {
         >
           <div className="">
             <div className="flex flex-row gap-2">
-              <div>Callouts</div>
+              <BarChart size={14} />
+              <div className="hidden md:block">Callouts</div>
             </div>
           </div>
         </BasicButton>
@@ -129,7 +133,8 @@ export default function Department() {
         >
           <div className="">
             <div className="flex flex-row gap-2">
-              <div>Stations</div>
+              <Navigation size={14} />
+              <div className="hidden md:block">Stations</div>
             </div>
           </div>
         </BasicButton>
@@ -140,7 +145,8 @@ export default function Department() {
         >
           <div className="">
             <div className="flex flex-row gap-2">
-              <div>Vehicles</div>
+              <Truck size={14} />
+              <div className="hidden md:block">Vehicles</div>
             </div>
           </div>
         </BasicButton>
@@ -151,7 +157,32 @@ export default function Department() {
         >
           <div className="">
             <div className="flex flex-row gap-2">
-              <div>Settings</div>
+              <SettingsIcon size={14} />
+              <div className="hidden md:block">Settings</div>
+            </div>
+          </div>
+        </BasicButton>
+        <BasicButton
+          state="default"
+          className={active === "Create" ? "bg-indigo-600" : "bg-indigo-400"}
+          onClick={() => setActive("Create")}
+        >
+          <div className="">
+            <div className="flex flex-row gap-2">
+              <PlusCircle size={14} />
+              <div className="hidden md:block">Create new</div>
+            </div>
+          </div>
+        </BasicButton>
+        <BasicButton
+          state="default"
+          className={active === "Join" ? "bg-indigo-600" : "bg-indigo-400"}
+          onClick={() => setActive("Join")}
+        >
+          <div className="">
+            <div className="flex flex-row gap-2">
+              <GitMerge size={14} />
+              <div className="hidden md:block">Join existing</div>
             </div>
           </div>
         </BasicButton>

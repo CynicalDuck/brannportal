@@ -9,6 +9,15 @@ import FeaturedCard from "../components/Cards/FeaturedCard";
 import { Separator } from "@/components/ui/separator";
 import BasicButton from "@/components/Buttons/BasicButton";
 import TableCallout from "@/components/Tables/TableCallout";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 // Import Icons
 import {
@@ -16,7 +25,7 @@ import {
   Truck,
   Users,
   Navigation,
-  Settings,
+  Home as HomeIcon,
   User,
 } from "react-feather";
 
@@ -27,7 +36,7 @@ export default function Home() {
 
   return (
     <main className="w-full">
-      <div className="container mx-auto">
+      <div className="">
         <div className="flex flex-col lg:flex-row lg:gap-10 gap-2">
           <div className="text-primary text-4xl hidden lg:block">Dashboard</div>
           <div className="bg-accent7 rounded-full py-2 px-2 text-primary">
@@ -37,13 +46,24 @@ export default function Home() {
             </div>
           </div>
           <div className="lg:flex lg:justify-end lg:grow lg:gap-2">
-            <BasicButton state="default" className="">
-              <div className="">
-                <div className="flex flex-row gap-2">
-                  <Settings /> <div>Profile settings</div>
-                </div>
-              </div>
-            </BasicButton>
+            <div className="md:hidden">
+              <Select onValueChange={(e) => window.location.assign(e)}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Menu" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectLabel>Pages</SelectLabel>
+                    <SelectItem value="home" disabled>
+                      Home
+                    </SelectItem>
+                    <SelectItem value="department">Department</SelectItem>
+                    <SelectItem value="station">Station</SelectItem>
+                    <SelectItem value="settings">Settings</SelectItem>
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
         <div className="flex flex-row gap-2 mt-5 text-xs">
@@ -54,8 +74,11 @@ export default function Home() {
             }
             onClick={() => setActive("Dashboard")}
           >
-            <div className="flex flex-row gap-2">
-              <div>Dashboard</div>
+            <div className="">
+              <div className="flex flex-row gap-2">
+                <HomeIcon size={14} />
+                <div className="hidden md:block">Dashboard</div>
+              </div>
             </div>
           </BasicButton>
         </div>
