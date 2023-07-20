@@ -58,11 +58,8 @@ ChartJS.register(
 // Import hooks
 
 // Types
-interface Props {
-  children?: React.ReactNode;
-}
 
-export default function Department({ children, ...props }: Props) {
+export default function Department() {
   // States
   const [active, setActive] = useState("Dashboard");
 
@@ -169,7 +166,7 @@ export default function Department({ children, ...props }: Props) {
   );
 }
 
-function Dashboard({ children, ...props }: Props) {
+function Dashboard() {
   // Variables
   const dataPie = {
     labels: [
@@ -355,7 +352,7 @@ function Dashboard({ children, ...props }: Props) {
   );
 }
 
-function Callouts({ children, ...props }: Props) {
+function Callouts() {
   return (
     <div className="w-full flex justify-center justify-items-center">
       <TableCallout title={"Department callouts"} />
@@ -363,7 +360,7 @@ function Callouts({ children, ...props }: Props) {
   );
 }
 
-function Stations({ children, ...props }: Props) {
+function Stations() {
   return (
     <div className="w-full flex justify-center justify-items-center">
       <TableStation />
@@ -371,7 +368,7 @@ function Stations({ children, ...props }: Props) {
   );
 }
 
-function Vehicles({ children, ...props }: Props) {
+function Vehicles() {
   return (
     <div className="w-full flex justify-center justify-items-center">
       <TableVehicle />
@@ -379,7 +376,7 @@ function Vehicles({ children, ...props }: Props) {
   );
 }
 
-function Settings({ children, ...props }: Props) {
+function Settings() {
   return (
     <div className="w-full">
       <div className="flex flex-col gap-4">
