@@ -14,7 +14,7 @@ import BasicButton from "../../../components/Buttons/BasicButton";
 
 // Types
 
-export default function Login({ ...props }) {
+export default function Login() {
   // States
   const [signUp, setSignUp] = useState(false);
   const [fortgotPassword, setForgotPassword] = useState(false);
