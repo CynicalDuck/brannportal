@@ -56,10 +56,14 @@ ChartJS.register(
 );
 
 // Import hooks
+import { useSession } from "@/hooks/authentication/useSession";
 
 // Types
 
 export default function Department() {
+  // Auth
+  const { session } = useSession();
+
   // States
   const [active, setActive] = useState("Dashboard");
 
@@ -70,6 +74,11 @@ export default function Department() {
   // Variables
 
   // Return
+
+  if (!session) {
+    return <div>Redirecting to login</div>;
+  }
+
   return (
     <div className="w-full">
       <div className="flex flex-col lg:flex-row lg:gap-10 gap-2">

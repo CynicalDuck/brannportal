@@ -19,6 +19,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+// Import hooks
+import { useSession } from "@/hooks/authentication/useSession";
+
 // Import Icons
 import {
   BarChart,
@@ -33,6 +36,13 @@ export default function Home() {
   // States
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [active, setActive] = useState("Dashboard");
+
+  // Auth
+  const { session } = useSession();
+
+  if (!session) {
+    return <div>Redirecting to login</div>;
+  }
 
   return (
     <main className="w-full">
