@@ -18,6 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import Progress from "@/components/Loaders/Progress";
 
 // Import hooks
 import { useSession } from "@/hooks/authentication/useSession";
@@ -41,8 +42,10 @@ export default function Home() {
   const { session } = useSession();
 
   if (!session) {
-    return <div>Redirecting to login</div>;
+    return <Progress />;
   }
+
+  console.log(session);
 
   return (
     <main className="w-full">
@@ -52,7 +55,13 @@ export default function Home() {
           <div className="bg-accent7 rounded-full py-2 px-2 text-primary">
             <div className="flex flex-row gap-2">
               <User />
-              <div>Marius Bekk</div>
+              <div>
+                {session?.user?.user_metadata?.name
+                  ? session?.user?.user_metadata?.name
+                  : session?.user?.email
+                  ? session?.user?.email
+                  : "Unknown user"}
+              </div>
             </div>
           </div>
           <div className="lg:flex lg:justify-end lg:grow lg:gap-2">
@@ -70,6 +79,9 @@ export default function Home() {
                     <SelectItem value="department">Department</SelectItem>
                     <SelectItem value="station">Station</SelectItem>
                     <SelectItem value="settings">Settings</SelectItem>
+                    <SelectItem value="authentication/logout">
+                      Sign out
+                    </SelectItem>
                   </SelectGroup>
                 </SelectContent>
               </Select>

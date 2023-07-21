@@ -120,84 +120,91 @@ export default function Login() {
   if (signUp) {
     return (
       <div className="flex justify-center w-full">
-        <div className="w-full md:1/2 lg:w-1/4">
+        <div className="w-full md:1/2 lg:w-1/8">
           <FeaturedCard
             title="SIGN UP"
             className="shadow shadow-black bg-dark"
             icon={<PenTool />}
           >
-            <div className="flex flex-col gap-2">
-              <div className="flex flex-col">
-                <div className="text-white text-sm">E-mail</div>
-                <input
-                  type="text"
-                  className="rounded-[10px] border border-accent3 text-dark px-2"
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-                {emailError ? (
-                  <div className="text-xs text-danger">
-                    Please enter a valid email
-                  </div>
-                ) : null}
-              </div>
-              <div className="flex flex-col">
-                <div className="text-white text-sm">Name</div>
-                <input
-                  type="text"
-                  className="rounded-[10px] border border-accent3 text-dark px-2"
-                  onChange={(e) => setName(e.target.value)}
-                />
-                {nameError ? (
-                  <div className="text-xs text-danger">Please your name</div>
-                ) : null}
-              </div>
-              <div className="flex flex-col">
-                <div className="text-white text-sm">Password</div>
-                <input
-                  type="password"
-                  className="rounded-[10px] border border-accent3 text-dark px-2"
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-                {passwordError ? (
-                  <div className="text-xs text-danger">
-                    Please enter a valid password, at least 8 chars long
-                  </div>
-                ) : null}
-              </div>
-              <div className="flex flex-col">
-                <div className="text-white text-sm">Confirm password</div>
-                <input
-                  type="password"
-                  className="rounded-[10px] border border-accent3 text-dark px-2"
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                />
-                {passwordConfirmError ? (
-                  <div className="text-xs text-danger">
-                    The passwords do not match, please try again!
-                  </div>
-                ) : null}
-              </div>
-              {error ? (
-                <div className="text-danger mt-2 mb-2 text-xs">
-                  {"Something went wrong: " + errorText}
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                signUpWithEmail();
+              }}
+            >
+              <div className="flex flex-col gap-2">
+                <div className="flex flex-col">
+                  <div className="text-white text-sm">E-mail</div>
+                  <input
+                    type="text"
+                    className="rounded-[10px] border border-accent3 text-dark px-2"
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
+                  {emailError ? (
+                    <div className="text-xs text-danger">
+                      Please enter a valid email
+                    </div>
+                  ) : null}
                 </div>
-              ) : null}
-              <BasicButton
-                state={"success"}
-                className="rounded-full shadow-xs shadow-black mt-4"
-                onClick={() => signUpWithEmail()}
-              >
-                Sign up
-              </BasicButton>
-              <div className="flex flex-row justify-end px-5">
-                <div
-                  className="text-xs hover:cursor-pointer hover:text-accent2"
-                  onClick={() => setSignUp(false)}
+                <div className="flex flex-col">
+                  <div className="text-white text-sm">Name</div>
+                  <input
+                    type="text"
+                    className="rounded-[10px] border border-accent3 text-dark px-2"
+                    onChange={(e) => setName(e.target.value)}
+                  />
+                  {nameError ? (
+                    <div className="text-xs text-danger">Please your name</div>
+                  ) : null}
+                </div>
+                <div className="flex flex-col">
+                  <div className="text-white text-sm">Password</div>
+                  <input
+                    type="password"
+                    className="rounded-[10px] border border-accent3 text-dark px-2"
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
+                  {passwordError ? (
+                    <div className="text-xs text-danger">
+                      Please enter a valid password, at least 8 chars long
+                    </div>
+                  ) : null}
+                </div>
+                <div className="flex flex-col">
+                  <div className="text-white text-sm">Confirm password</div>
+                  <input
+                    type="password"
+                    className="rounded-[10px] border border-accent3 text-dark px-2"
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                  />
+                  {passwordConfirmError ? (
+                    <div className="text-xs text-danger">
+                      The passwords do not match, please try again!
+                    </div>
+                  ) : null}
+                </div>
+                {error ? (
+                  <div className="text-danger mt-2 mb-2 text-xs">
+                    {"Something went wrong: " + errorText}
+                  </div>
+                ) : null}
+                <BasicButton
+                  state={"success"}
+                  className="rounded-full shadow-xs shadow-black mt-4"
+                  onClick={() => signUpWithEmail()}
                 >
-                  Cancel
+                  Sign up
+                </BasicButton>
+                <div className="flex flex-row justify-end px-5">
+                  <div
+                    className="text-xs hover:cursor-pointer hover:text-accent2"
+                    onClick={() => setSignUp(false)}
+                  >
+                    Cancel
+                  </div>
                 </div>
               </div>
-            </div>
+            </form>
           </FeaturedCard>
         </div>
       </div>
@@ -211,27 +218,34 @@ export default function Login() {
           title="FORGOT PASSWORD"
           className="shadow shadow-black bg-dark"
         >
-          <div className="flex flex-col gap-1">
-            <div className="text-white text-xs">
-              Enter your e-mail below, if the e-mail exists in our database you
-              will get a reset password link sent to you
-            </div>
-            <input
-              type="text"
-              className="rounded-[10px] border border-accent3 text-dark px-2"
-            />
-            <BasicButton state={"success"} className="mt-2">
-              Reset password
-            </BasicButton>
-            <div className="flex flex-row justify-end px-1">
-              <div
-                className="text-xs hover:cursor-pointer hover:text-accent2"
-                onClick={() => setForgotPassword(false)}
-              >
-                Cancel
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              signInWithEmail();
+            }}
+          >
+            <div className="flex flex-col gap-1">
+              <div className="text-white text-xs">
+                Enter your e-mail below, if the e-mail exists in our database
+                you will get a reset password link sent to you
+              </div>
+              <input
+                type="text"
+                className="rounded-[10px] border border-accent3 text-dark px-2"
+              />
+              <BasicButton state={"success"} className="mt-2">
+                Reset password
+              </BasicButton>
+              <div className="flex flex-row justify-end px-1">
+                <div
+                  className="text-xs hover:cursor-pointer hover:text-accent2"
+                  onClick={() => setForgotPassword(false)}
+                >
+                  Cancel
+                </div>
               </div>
             </div>
-          </div>
+          </form>
         </FeaturedCard>
       </div>
     );
@@ -244,47 +258,54 @@ export default function Login() {
           title="LOGIN"
           className="shadow shadow-black bg-dark py-2 px-2"
         >
-          <div className="flex flex-col gap-1">
-            <div className="text-white text-sm">E-mail</div>
-            <input
-              type="text"
-              className="rounded-[10px] border border-accent3 text-dark px-2"
-              onChange={(e) => setEmail(e.target.value)}
-            />
-            <div className="text-white text-sm">Password</div>
-            <input
-              type="password"
-              className="rounded-[10px] border border-accent3 px-2 text-dark"
-              onChange={(e) => setPassword(e.target.value)}
-            />
-            <div className="flex flex-row justify-between mb-4 px-1">
-              <div
-                className="text-xs hover:cursor-pointer hover:text-accent2"
-                onClick={() => setSignUp(true)}
-              >
-                Sign up
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              signInWithEmail();
+            }}
+          >
+            <div className="flex flex-col gap-1">
+              <div className="text-white text-sm">E-mail</div>
+              <input
+                type="text"
+                className="rounded-[10px] border border-accent3 text-dark px-2"
+                onChange={(e) => setEmail(e.target.value)}
+              />
+              <div className="text-white text-sm">Password</div>
+              <input
+                type="password"
+                className="rounded-[10px] border border-accent3 px-2 text-dark"
+                onChange={(e) => setPassword(e.target.value)}
+              />
+              <div className="flex flex-row justify-between mb-4 px-1">
+                <div
+                  className="text-xs hover:cursor-pointer hover:text-accent2"
+                  onClick={() => setSignUp(true)}
+                >
+                  Sign up
+                </div>
+                <div
+                  className="text-xs hover:cursor-pointer hover:text-accent2"
+                  onClick={() => setForgotPassword(true)}
+                >
+                  Forgot password?
+                </div>
               </div>
-              <div
-                className="text-xs hover:cursor-pointer hover:text-accent2"
-                onClick={() => setForgotPassword(true)}
+              {signUpSuccess ? (
+                <div className="text-success mt-2 mb-2">
+                  Your user have been created, please check your email for
+                  confirmation link
+                </div>
+              ) : null}
+              <button
+                type="submit"
+                className="rounded-full shadow-xs shadow-black bg-success py-2"
+                onClick={() => signInWithEmail()}
               >
-                Forgot password?
-              </div>
+                Log in
+              </button>
             </div>
-            {signUpSuccess ? (
-              <div className="text-success mt-2 mb-2">
-                Your user have been created, please check your email for
-                confirmation link
-              </div>
-            ) : null}
-            <BasicButton
-              state={"success"}
-              className="rounded-full shadow-xs shadow-black"
-              onClick={() => signInWithEmail()}
-            >
-              Log in
-            </BasicButton>
-          </div>
+          </form>
         </FeaturedCard>
       </div>
     </div>

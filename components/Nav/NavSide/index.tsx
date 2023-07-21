@@ -2,7 +2,7 @@ import React from "react";
 import Image from "next/image";
 
 // Import icons
-import { Box, Home, Settings, Navigation, User } from "react-feather";
+import { Box, Home, Settings, Navigation, User, LogOut } from "react-feather";
 
 // Import components
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -30,6 +30,12 @@ export default function NavSide({ children, ...props }: Props) {
         </a>
         <a href="/settings" className="text-white hover:text-light">
           <Settings className="mx-auto" />
+        </a>
+        <a
+          href="/authentication/logout"
+          className="text-white hover:text-light"
+        >
+          <LogOut className="mx-auto" />
         </a>
         <div className="mt-auto mb-5">
           <Avatar className="text-white">

@@ -34,6 +34,7 @@ import {
   SelectGroup,
   SelectLabel,
 } from "@/components/ui/select";
+import Progress from "@/components/Loaders/Progress";
 
 import {
   Chart as ChartJS,
@@ -76,7 +77,7 @@ export default function Department() {
   // Return
 
   if (!session) {
-    return <div>Redirecting to login</div>;
+    return <Progress />;
   }
 
   return (
@@ -105,6 +106,7 @@ export default function Department() {
                 </SelectItem>
                 <SelectItem value="station">Station</SelectItem>
                 <SelectItem value="settings">Settings</SelectItem>
+                <SelectItem value="authentication/logout">Sign out</SelectItem>
               </SelectGroup>
             </SelectContent>
           </Select>
