@@ -120,7 +120,7 @@ export default function Login() {
   if (signUp) {
     return (
       <div className="flex justify-center w-full">
-        <div className="w-1/4">
+        <div className="w-full md:1/2 lg:w-1/4">
           <FeaturedCard
             title="SIGN UP"
             className="shadow shadow-black bg-dark"
@@ -206,7 +206,7 @@ export default function Login() {
 
   if (forgotPassword) {
     return (
-      <div className="w-1/4">
+      <div className="w-full md:1/2 lg:w-1/4">
         <FeaturedCard
           title="FORGOT PASSWORD"
           className="shadow shadow-black bg-dark"
@@ -239,7 +239,7 @@ export default function Login() {
 
   return (
     <div className="flex row justify-center grow w-full">
-      <div className="w-1/4">
+      <div className="w-full md:w-1/2 lg:1/4">
         <FeaturedCard
           title="LOGIN"
           className="shadow shadow-black bg-dark py-2 px-2"
