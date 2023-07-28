@@ -36,7 +36,7 @@ export default function AutocompleteAddress({
 
   // Functions
   const { isLoaded } = useLoadScript({
-    googleMapsApiKey: "AIzaSyDx2EH8Rs0zljU_4946aFIe80ir1fIkQ3M" as string,
+    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_API_KEY as string,
     libraries: libraries as any,
   });
 

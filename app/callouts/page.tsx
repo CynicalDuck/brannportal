@@ -24,12 +24,7 @@ import AutocompleteAddress from "@/components/Maps/Autocomplete";
 import { useSession } from "@/hooks/authentication/useSession";
 import { useFetchUserCallouts } from "@/hooks/fetch/useFetchUserCallouts";
 
-// Types
-interface Props {
-  children?: React.ReactNode;
-}
-
-export default function Callouts({ children, ...props }: Props) {
+export default function Callouts() {
   // States
   const [createNew, setCreateNew] = useState(false);
 
