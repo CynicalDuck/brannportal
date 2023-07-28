@@ -102,6 +102,7 @@ export default function Station() {
               <SelectGroup>
                 <SelectLabel>Pages</SelectLabel>
                 <SelectItem value="/">Home</SelectItem>
+                <SelectItem value="callouts">Callouts</SelectItem>
                 <SelectItem value="department">Department</SelectItem>
                 <SelectItem value="station" disabled>
                   Station

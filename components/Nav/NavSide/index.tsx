@@ -2,7 +2,15 @@ import React from "react";
 import Image from "next/image";
 
 // Import icons
-import { Box, Home, Settings, Navigation, User, LogOut } from "react-feather";
+import {
+  Box,
+  Home,
+  Settings,
+  Navigation,
+  User,
+  LogOut,
+  BarChart,
+} from "react-feather";
 
 // Import components
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -21,6 +29,9 @@ export default function NavSide({ children, ...props }: Props) {
         </div>
         <a href="/" className="text-white hover:text-light ">
           <Home className="mx-auto" />
+        </a>
+        <a href="/callouts" className="text-white hover:text-light">
+          <BarChart className="mx-auto" />
         </a>
         <a href="/department" className="text-white hover:text-light ">
           <Box className="mx-auto" />

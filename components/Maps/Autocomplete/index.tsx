@@ -1,64 +1,66 @@
 "use client";
 
-import { useLoadScript, GoogleMap } from "@react-google-maps/api";
-import type { NextPage } from "next";
+// Import required
+import { useLoadScript } from "@react-google-maps/api";
+import { NextPage } from "next";
 import { useMemo, useState } from "react";
-
 import usePlacesAutocomplete, {
   getGeocode,
   getLatLng,
+  getDetails,
+  getZipCode,
 } from "use-places-autocomplete";
 
-const About: NextPage = () => {
-  const [lat, setLat] = useState(27.672932021393862);
-  const [lng, setLng] = useState(85.31184012689732);
+// Import icons
+import {} from "react-feather";
+
+// Import components
+
+// Import hooks
+
+// Types
+interface Props {
+  children?: React.ReactNode;
+  onAddressSelect: any;
+}
+
+export default function AutocompleteAddress({
+  children,
+  onAddressSelect,
+  ...props
+}: Props) {
+  // States
   const libraries = useMemo(() => ["places"], []);
-  const mapCenter = useMemo(
-    () => ({ lat: 27.672932021393862, lng: 85.31184012689732 }),
-    []
-  );
 
-  const mapOptions = useMemo<google.maps.MapOptions>(
-    () => ({
-      disableDefaultUI: true,
-      clickableIcons: true,
-      scrollwheel: false,
-    }),
-    []
-  );
+  // Fetching
 
+  // Functions
   const { isLoaded } = useLoadScript({
     googleMapsApiKey: "AIzaSyDx2EH8Rs0zljU_4946aFIe80ir1fIkQ3M" as string,
     libraries: libraries as any,
   });
 
+  // Return
   if (!isLoaded) {
     return <p>Loading...</p>;
   }
 
   return (
-    <div>
+    <div className="w-full">
       <PlacesAutocomplete
         onAddressSelect={(address) => {
-          getGeocode({ address: address }).then((results) => {
+          getGeocode({ address }).then((results) => {
             const { lat, lng } = getLatLng(results[0]);
+            const address = results[0].formatted_address;
+            const zip = getZipCode(results[0], false);
 
-            setLat(lat);
-            setLng(lng);
+            onAddressSelect(lat, lng, address, zip);
           });
         }}
       />
-      <GoogleMap
-        options={mapOptions}
-        zoom={14}
-        center={mapCenter}
-        mapTypeId={google.maps.MapTypeId.ROADMAP}
-        mapContainerStyle={{ width: "800px", height: "800px" }}
-        onLoad={() => console.log("Map Component Loaded...")}
-      />
     </div>
   );
-};
+}
 
 const PlacesAutocomplete = ({
   onAddressSelect,
@@ -72,7 +74,9 @@ const PlacesAutocomplete = ({
     setValue,
     clearSuggestions,
   } = usePlacesAutocomplete({
-    requestOptions: { componentRestrictions: { country: "no" } },
+    requestOptions: {
+      types: ["address"],
+    },
     debounce: 300,
     cache: 86400,
   });
@@ -91,7 +95,7 @@ const PlacesAutocomplete = ({
           onClick={() => {
             setValue(description, false);
             clearSuggestions();
-            onAddressSelect && onAddressSelect(description);
+            onAddressSelect?.(description);
           }}
         >
           <strong>{main_text}</strong> <small>{secondary_text}</small>
@@ -101,18 +105,15 @@ const PlacesAutocomplete = ({
   };
 
   return (
-    <div className={""}>
+    <div className="w-full">
       <input
         value={value}
-        className={""}
+        className="rounded-full px-2 w-full"
         disabled={!ready}
         onChange={(e) => setValue(e.target.value)}
-        placeholder="123 Stariway To Heaven"
+        placeholder="Search"
       />
-
-      {status === "OK" && <ul className={""}>{renderSuggestions()}</ul>}
+      {status === "OK" && <ul className="">{renderSuggestions()}</ul>}
     </div>
   );
 };
-
-export default About;

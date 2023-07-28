@@ -22,6 +22,8 @@ import Progress from "@/components/Loaders/Progress";
 
 // Import hooks
 import { useSession } from "@/hooks/authentication/useSession";
+import { useFetch } from "@/hooks/fetch/useFetch";
+import { useFetchUserCallouts } from "@/hooks/fetch/useFetchUserCallouts";
 
 // Import Icons
 import {
@@ -41,11 +43,15 @@ export default function Home() {
   // Auth
   const { session } = useSession();
 
+  // Fetch
+  const { data: dataCallouts, error: errorCallouts } = useFetchUserCallouts();
+
+  console.log(dataCallouts);
+  console.log(errorCallouts);
+
   if (!session) {
     return <Progress />;
   }
-
-  console.log(session);
 
   return (
     <main className="w-full">
@@ -76,6 +82,7 @@ export default function Home() {
                     <SelectItem value="home" disabled>
                       Home
                     </SelectItem>
+                    <SelectItem value="callouts">Callouts</SelectItem>
                     <SelectItem value="department">Department</SelectItem>
                     <SelectItem value="station">Station</SelectItem>
                     <SelectItem value="settings">Settings</SelectItem>
@@ -117,22 +124,30 @@ export default function Home() {
               >
                 <div className="flex flex-col px-6">
                   <div className="flex flex-row">
-                    <div className="text-5xl">189</div>
+                    <div className="text-5xl">
+                      {dataCallouts ? dataCallouts.countThisMonth : 0}
+                    </div>
                     <div className="ml-5">This month</div>
                   </div>
                   <div className="flex justify-evenly py-4">
                     <div className="text-center mx-4">
-                      <div className="text-xl font-bold">24</div>
+                      <div className="text-xl font-bold">
+                        {dataCallouts ? dataCallouts.countToday : 0}
+                      </div>
                       <div className="text-sm">Today</div>
                     </div>
                     <div className="border-r border-dotted" />
                     <div className="text-center mx-4">
-                      <div className="text-xl font-bold">2365</div>
+                      <div className="text-xl font-bold">
+                        {dataCallouts ? dataCallouts.countThisYear : 0}
+                      </div>
                       <div className="text-sm">This year</div>
                     </div>
                     <div className="border-r border-dotted" />
                     <div className="text-center mx-4">
-                      <div className="text-xl font-bold">14065</div>
+                      <div className="text-xl font-bold">
+                        {dataCallouts ? dataCallouts.data.length : 0}
+                      </div>
                       <div className="text-sm">All time</div>
                     </div>
                   </div>
@@ -162,7 +177,7 @@ export default function Home() {
                     </div>
                     <div className="border-r border-dotted" />
                     <div className="text-center mx-4">
-                      <div className="font-bold">0,4%</div>
+                      <div className="font-bold">{6 * 0.00000445}%</div>
                       <div className="text-sm">Heighten risk of cancer (*)</div>
                     </div>
                   </div>
@@ -226,7 +241,7 @@ export default function Home() {
               </FeaturedCard>
             </div>
           </div>
-          <TableCallout />
+          <TableCallout data={dataCallouts?.data} />
         </div>
       </div>
     </main>

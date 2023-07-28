@@ -8,7 +8,8 @@ interface Props {
   state: "default" | "success" | "warning" | "alert";
   icon?: React.ReactNode;
   className?: React.ReactNode;
-  onClick?: (event: React.MouseEvent<HTMLButtonElement>) => void; // Add onClick prop
+  onClick?: (event: React.MouseEvent<HTMLButtonElement>) => void;
+  disabled?: boolean | false;
 }
 
 export default function BasicButton({
@@ -16,7 +17,8 @@ export default function BasicButton({
   icon,
   children,
   className,
-  onClick, // Add onClick prop to the destructuring
+  onClick,
+  disabled,
   ...props
 }: Props) {
   let buttonColorClass = "";
@@ -39,14 +41,29 @@ export default function BasicButton({
       break;
   }
 
+  switch (disabled) {
+    case false:
+      buttonColorClass = buttonColorClass;
+      break;
+    case true:
+      buttonColorClass = "bg-gray-300";
+      break;
+    default:
+      buttonColorClass = buttonColorClass = buttonColorClass;
+      break;
+  }
+
   return (
     <button
       onClick={onClick} // Add onClick prop here
       className={cn(
-        `px-4 py-2 rounded-full ${buttonColorClass} text-white hover:brightness-125`,
+        `px-4 py-2 rounded-full ${buttonColorClass} text-white ${
+          disabled ? "hover:brightness-100" : "hover:brightness-125"
+        }`,
         className
       )}
       {...props}
+      disabled={disabled}
     >
       {icon && <span className="mr-2">{icon}</span>}
       {children}

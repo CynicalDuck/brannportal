@@ -23,9 +23,15 @@ import {
 interface Props {
   children?: React.ReactNode;
   title?: string | null;
+  data?: any | null;
 }
 
-export default function TableCallout({ children, title, ...props }: Props) {
+export default function TableCallout({
+  children,
+  title,
+  data,
+  ...props
+}: Props) {
   // States
 
   // Fetching
@@ -73,16 +79,16 @@ export default function TableCallout({ children, title, ...props }: Props) {
         </TableRow>
       </TableHeader>
       <TableBody>
-        {callouts.map((callout) => (
+        {data?.map((callout: any) => (
           <TableRow
-            key={callout.callout}
+            key={callout.id}
             className="hover:bg-light hover:cursor-pointer"
           >
-            <TableCell className="font-medium">{callout.callout}</TableCell>
-            <TableCell>{callout.category}</TableCell>
+            <TableCell className="font-medium">{callout.id}</TableCell>
+            <TableCell>{callout.type}</TableCell>
             <TableCell>
               <div className="flex flex-row gap-2">
-                {callout.resources.map((resource) => (
+                {callout.resources?.map((resource: any) => (
                   <div
                     key={resource}
                     className="bg-warning px-2 rounded-[15px]"
@@ -92,7 +98,7 @@ export default function TableCallout({ children, title, ...props }: Props) {
                 ))}
               </div>
             </TableCell>
-            <TableCell>{callout.time}</TableCell>
+            <TableCell>{callout.date_start}</TableCell>
           </TableRow>
         ))}
       </TableBody>
