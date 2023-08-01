@@ -18,11 +18,7 @@ export function useFetchUserCallouts() {
       // Fetch all callouts for the user
       const { data, error } = await supabase
         .from("user_connection_callout")
-        .select(
-          `*,
-          callout (*)
-    `
-        )
+        .select(`*, callout (*)`)
         .eq("user", session?.user.id);
 
       if (data) {
@@ -68,8 +64,15 @@ export function useFetchUserCallouts() {
           }
         });
 
+        // Sort the data based on the 'date_start' field from the related 'callout' table
+        const sortedData = data.sort((a: any, b: any) => {
+          const dateA: any = new Date(a.callout?.date_start || "");
+          const dateB: any = new Date(b.callout?.date_start || "");
+          return dateB - dateA;
+        });
+
         returnData = {
-          data: data,
+          data: sortedData,
           countThisMonth: countThisMonth,
           countThisYear: countThisYear,
           countToday: countToday,

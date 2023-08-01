@@ -33,10 +33,19 @@ export default function TableCallout({
   ...props
 }: Props) {
   // States
+  const [itemsToShow, setItemsToShow] = useState(5);
 
   // Fetching
 
   // Functions
+  const handleSeeMore = () => {
+    // Set itemsToShow to a large number (e.g., data.length) to show all items
+    if (itemsToShow === 5) {
+      setItemsToShow(data.length);
+    } else {
+      setItemsToShow(5);
+    }
+  };
 
   // Variables - Mock data
   const callouts = [
@@ -68,40 +77,61 @@ export default function TableCallout({
 
   // Return
   return (
-    <Table className="bg-accent7 rounded-[20px] shadow-xs shadow-black">
-      <TableCaption>{title}</TableCaption>
-      <TableHeader>
-        <TableRow>
-          <TableHead className="w-[100px]">Callout</TableHead>
-          <TableHead className="w-[300px]">Category</TableHead>
-          <TableHead className="w-[700px]">Resources</TableHead>
-          <TableHead className="w-[300px]">Time</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {data?.map((callout: any) => (
-          <TableRow
-            key={callout.callout.id}
-            className="hover:bg-light hover:cursor-pointer"
-          >
-            <TableCell className="font-medium">{callout.callout.id}</TableCell>
-            <TableCell>{callout.callout.type}</TableCell>
-            <TableCell>
-              <div className="flex flex-row gap-2">
-                {callout.callout.resources?.map((resource: any) => (
-                  <div
-                    key={resource}
-                    className="bg-warning px-2 rounded-[15px]"
-                  >
-                    {resource}
-                  </div>
-                ))}
-              </div>
-            </TableCell>
-            <TableCell>{callout.callout.date_start}</TableCell>
+    <div className="flex flex-col gap-0">
+      <Table className="bg-accent7 rounded-[20px] shadow-xs shadow-black">
+        <TableCaption>{title}</TableCaption>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="w-[100px]">Callout</TableHead>
+            <TableHead className="w-[300px]">Category</TableHead>
+            <TableHead className="w-[700px]">Resources</TableHead>
+            <TableHead className="w-[300px]">Time</TableHead>
           </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+        </TableHeader>
+        <TableBody>
+          {data?.slice(0, itemsToShow).map((callout: any) => (
+            <TableRow
+              key={callout.callout.id}
+              className="hover:bg-light hover:cursor-pointer"
+            >
+              <TableCell className="font-medium">
+                {callout.callout.callout_id
+                  ? callout.callout.callout_id
+                  : callout.callout.id}
+              </TableCell>
+              <TableCell>{callout.callout.type}</TableCell>
+              <TableCell>
+                <div className="flex flex-row gap-2">
+                  {callout.callout.resources?.map((resource: any) => (
+                    <div
+                      key={resource}
+                      className="bg-warning px-2 rounded-[15px]"
+                    >
+                      {resource}
+                    </div>
+                  ))}
+                </div>
+              </TableCell>
+              <TableCell>{callout.callout.date_start}</TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+      {itemsToShow < data?.length ? (
+        <div
+          className="text-primary cursor-pointer text-sm text-left"
+          onClick={handleSeeMore}
+        >
+          See More
+        </div>
+      ) : (
+        <div
+          className="text-primary cursor-pointer text-sm text-left"
+          onClick={handleSeeMore}
+        >
+          See less
+        </div>
+      )}
+    </div>
   );
 }

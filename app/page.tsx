@@ -185,9 +185,9 @@ export default function Home() {
                 <div className="flex flex-col px-6">
                   <div className="flex flex-row">
                     <div className="text-5xl">
-                      {dataCallouts ? dataCallouts.countThisMonth : 0}
+                      {dataCallouts ? dataCallouts.data.length : 0}
                     </div>
-                    <div className="ml-5">This month</div>
+                    <div className="ml-5">All time</div>
                   </div>
                   <div className="flex justify-evenly py-4">
                     <div className="text-center mx-4">
@@ -199,16 +199,16 @@ export default function Home() {
                     <div className="border-r border-dotted" />
                     <div className="text-center mx-4">
                       <div className="text-xl font-bold">
-                        {dataCallouts ? dataCallouts.countThisYear : 0}
+                        {dataCallouts ? dataCallouts.countThisMonth : 0}
                       </div>
-                      <div className="text-sm">This year</div>
+                      <div className="text-sm">This month</div>
                     </div>
                     <div className="border-r border-dotted" />
                     <div className="text-center mx-4">
                       <div className="text-xl font-bold">
-                        {dataCallouts ? dataCallouts.data.length : 0}
+                        {dataCallouts ? dataCallouts.countThisYear : 0}
                       </div>
-                      <div className="text-sm">All time</div>
+                      <div className="text-sm">This year</div>
                     </div>
                   </div>
                 </div>
