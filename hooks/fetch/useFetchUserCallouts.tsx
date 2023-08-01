@@ -17,9 +17,13 @@ export function useFetchUserCallouts() {
 
       // Fetch all callouts for the user
       const { data, error } = await supabase
-        .from("callouts")
-        .select()
-        .contains("users", [session?.user?.id]); // Filter callouts by user id
+        .from("user_connection_callout")
+        .select(
+          `*,
+          callout (*)
+    `
+        )
+        .eq("user", session?.user.id);
 
       if (data) {
         var returnData = {};
@@ -31,29 +35,46 @@ export function useFetchUserCallouts() {
 
         const countThisMonth = data.filter(
           (callout: any) =>
-            new Date(callout.date_start).getFullYear() === currentYear &&
-            new Date(callout.date_start).getMonth() + 1 === currentMonth
+            new Date(callout.callout.date_start).getFullYear() ===
+              currentYear &&
+            new Date(callout.callout.date_start).getMonth() + 1 === currentMonth
         ).length;
 
         // Calculate the count of callouts with date_start within the current year
         const countThisYear = data.filter(
           (callout: any) =>
-            new Date(callout.date_start).getFullYear() === currentYear
+            new Date(callout.callout.date_start).getFullYear() === currentYear
         ).length;
 
+        // Calculate the count of callouts with date_start within the current day
         const currentDay = currentDate.getDate(); // Get the day of the current date
         const countToday = data.filter(
           (callout: any) =>
-            new Date(callout.date_start).getFullYear() === currentYear &&
-            new Date(callout.date_start).getMonth() + 1 === currentMonth &&
-            new Date(callout.date_start).getDate() === currentDay
+            new Date(callout.callout.date_start).getFullYear() ===
+              currentYear &&
+            new Date(callout.callout.date_start).getMonth() + 1 ===
+              currentMonth &&
+            new Date(callout.callout.date_start).getDate() === currentDay
         ).length;
+
+        // Get data on smoke exposure
+        var exposedMinutes = 0;
+        var countExposed = 0;
+        data.forEach((item) => {
+          if (item.callout.exposed_to_smoke) {
+            exposedMinutes =
+              exposedMinutes + item.callout.exposed_to_smoke_time;
+            countExposed++;
+          }
+        });
 
         returnData = {
           data: data,
           countThisMonth: countThisMonth,
           countThisYear: countThisYear,
           countToday: countToday,
+          exposedToSmokeTime: exposedMinutes,
+          exposedToSmokeCount: countExposed,
         };
 
         setData(returnData);

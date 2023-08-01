@@ -96,10 +96,12 @@ function CreateNew() {
   const [zip, setZip] = useState<any>(null);
   const [exposedToSmoke, setExposedToSmoke] = useState(false);
   const [exposedToSmokeTime, setExposedToSmokeTime] = useState("");
-  const [exposedToToxicSmokeTime, setExposedToToxicSmokeTime] = useState("");
+  const [calloutId, setCalloutId] = useState("");
   const [activeDepartment, setActiveDepartment] = useState<any>();
   const [allDepartments, setAllDepartments] = useState<any>();
   const [departmentTypes, setDepartmentTypes] = useState<any>();
+  const [activeStation, setActiveStation] = useState<any>();
+  const [allStations, setAllStations] = useState<any>();
 
   // Auth
   const { session } = useSession();
@@ -134,13 +136,47 @@ function CreateNew() {
     }
   }
 
+  async function fetchStations() {
+    if (session) {
+      const { data, error } = await supabase
+        .from("user_connection_station")
+        .select(
+          `*,
+          station (*)
+    `
+        )
+        .eq("user", session?.user.id);
+
+      if (error) {
+        alert(
+          "There was an error when fetching your departments: " + error.message
+        );
+      } else {
+        setActiveStation(data[0].station || null);
+
+        // Create a list of all departments
+        let allStations: any = [];
+        data.forEach((connection) => {
+          allStations.push(connection.station);
+        });
+
+        setAllStations(allStations);
+      }
+    }
+  }
+
   // Use Effect
   useEffect(() => {
     const fetchDepartmentsData = async () => {
       const data = await fetchDeparments();
     };
 
+    const fetchStationData = async () => {
+      const data = await fetchStations();
+    };
+
     fetchDepartmentsData();
+    fetchStationData();
   }, [session]);
 
   useEffect(() => {
@@ -176,11 +212,11 @@ function CreateNew() {
   });
 
   // Function to handle form submission
-  const handleSubmit = (e: any) => {
+  async function handleSubmit(e: any) {
     e.preventDefault();
 
     // Perform validation checks
-    const errors = {
+    const errors: any = {
       type: "",
       dateStart: "",
       timeStart: "",
@@ -213,11 +249,52 @@ function CreateNew() {
 
     setFormErrors(errors);
 
+    console.log(Object.keys(errors));
+
     // If there are no errors, submit the form
-    if (Object.keys(errors).length === 0) {
-      // Your logic to save the form data to the database
+    if (Object.keys(errors).every((key) => errors[key] === "")) {
+      const { data, error } = await supabase
+        .from("callouts")
+        .insert({
+          type: type,
+          address: address,
+          zip: zip ? zip : null,
+          latitude: lat ? lat : null,
+          longitude: lng ? lat : null,
+          description: description ? description : null,
+          date_start: dateStart,
+          time_start: timeStart,
+          date_end: dateEnd,
+          time_end: timeEnd,
+          callout_id: calloutId,
+          created_by: session.user.id,
+          department: activeDepartment.id ? activeDepartment.id : null,
+          station: activeStation.id ? activeStation.id : null,
+          exposed_to_smoke: exposedToSmoke,
+          exposed_to_smoke_time: exposedToSmokeTime ? exposedToSmokeTime : null,
+        })
+        .select();
+
+      if (error) {
+        alert("Something went wrong. Error: " + error.message);
+        console.log(error);
+      } else {
+        const { data: dataConnection, error: errorConnection } = await supabase
+          .from("user_connection_callout")
+          .insert({
+            callout: data[0].id,
+            user: session.user.id,
+          });
+
+        if (errorConnection) {
+          alert("Something went wrong. Error: " + errorConnection.message);
+          console.log(error);
+        } else {
+          window.location.reload();
+        }
+      }
     }
-  };
+  }
 
   // Function to handle address selection
   const handleAddressSelect = (
@@ -241,6 +318,15 @@ function CreateNew() {
     });
   };
 
+  // Function to handle station select
+  const handleStationSelect = (id: any) => {
+    allStations.forEach((station: any) => {
+      if (station.id.toString() === id) {
+        setActiveStation(station);
+      }
+    });
+  };
+
   return (
     <div className="w-full flex-grow flex-col md:w-[500px] lg:w-[800px]">
       <form className="bg-white p-4 rounded-[20px]" onSubmit={handleSubmit}>
@@ -259,6 +345,33 @@ function CreateNew() {
               );
             })}
           </select>
+        </div>
+        <div className="mb-4">
+          <label className="block text-primary font-semibold">Station</label>
+          <select
+            defaultValue={activeStation}
+            onChange={(e) => handleStationSelect(e.target.value)}
+            className="w-full px-3 py-2 rounded-md border"
+          >
+            {allStations?.map((station: any) => {
+              if (activeDepartment?.id === station?.department) {
+                return (
+                  <option value={station.id} key={station.id}>
+                    {station.code_full + " - " + station.name}
+                  </option>
+                );
+              }
+            })}
+          </select>
+        </div>
+        <div className="mb-4">
+          <label className="block text-primary font-semibold">Callout ID</label>
+          <input
+            type="text"
+            value={calloutId}
+            onChange={(e) => setCalloutId(e.target.value)}
+            className="w-full px-3 py-2 rounded-md border"
+          />
         </div>
         <div className="mb-4">
           <label className="block text-primary font-semibold">Type</label>

@@ -81,14 +81,14 @@ export default function TableCallout({
       <TableBody>
         {data?.map((callout: any) => (
           <TableRow
-            key={callout.id}
+            key={callout.callout.id}
             className="hover:bg-light hover:cursor-pointer"
           >
-            <TableCell className="font-medium">{callout.id}</TableCell>
-            <TableCell>{callout.type}</TableCell>
+            <TableCell className="font-medium">{callout.callout.id}</TableCell>
+            <TableCell>{callout.callout.type}</TableCell>
             <TableCell>
               <div className="flex flex-row gap-2">
-                {callout.resources?.map((resource: any) => (
+                {callout.callout.resources?.map((resource: any) => (
                   <div
                     key={resource}
                     className="bg-warning px-2 rounded-[15px]"
@@ -98,7 +98,7 @@ export default function TableCallout({
                 ))}
               </div>
             </TableCell>
-            <TableCell>{callout.date_start}</TableCell>
+            <TableCell>{callout.callout.date_start}</TableCell>
           </TableRow>
         ))}
       </TableBody>

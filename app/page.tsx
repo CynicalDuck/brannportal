@@ -1,7 +1,8 @@
 "use client";
 
 // Import required
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { supabase } from "../app/supabase";
 
 // Import Components
 import BasicCard from "../components/Cards/BasicCard";
@@ -19,6 +20,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import Progress from "@/components/Loaders/Progress";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 // Import hooks
 import { useSession } from "@/hooks/authentication/useSession";
@@ -39,6 +46,7 @@ export default function Home() {
   // States
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [active, setActive] = useState("Dashboard");
+  const [stations, setStations] = useState<any>();
 
   // Auth
   const { session } = useSession();
@@ -46,8 +54,60 @@ export default function Home() {
   // Fetch
   const { data: dataCallouts, error: errorCallouts } = useFetchUserCallouts();
 
-  console.log(dataCallouts);
-  console.log(errorCallouts);
+  async function fetchUserStations() {
+    const { data, error } = await supabase
+      .from("user_connection_station")
+      .select(
+        `*,
+          station (*)
+    `
+      )
+      .eq("user", session?.user.id);
+
+    if (!error) {
+      setStations(data);
+    }
+  }
+
+  // Functions
+  // Helper function to convert minutes to "h hours m minutes" format
+  const formatTime = (minutes: any) => {
+    if (minutes >= 60) {
+      const hours = Math.floor(minutes / 60);
+      const remainingMinutes = minutes % 60;
+      return `${hours}h ${remainingMinutes} minutes`;
+    } else {
+      return `${minutes} minutes`;
+    }
+  };
+
+  // Use effects
+  useEffect(() => {
+    const fetchStationsData = async () => {
+      const data = await fetchUserStations();
+    };
+
+    fetchStationsData();
+  }, [session]);
+
+  // Variables
+  const TooltipContentText = () => (
+    <div>
+      This is just an <strong>ESTIMATE </strong> based on a research paper
+      written by Joe Domitrovich, George Broyles, <br /> Roger D. Ottmar,
+      Timothy E. Reinhardt, Luke P. Naeher, Michael T. Kleinman, Kathleen M.
+      Navarro, Christopher E. Mackay, and Olorunfemi Adetona in 2017.
+      <br /> They estimate that the risk of cancer for{" "}
+      <strong>Wildland </strong>
+      firefighters will heighten by 22-24% after 10 years and 25-39% after 20
+      years.
+      <br /> We have taken the middle ground of 30.5 percent and 15 years and
+      found the rise in % per minute. This is just to give you an idea of the
+      risk of cancer in our line of work.
+    </div>
+  );
+
+  // Returns
 
   if (!session) {
     return <Progress />;
@@ -114,7 +174,7 @@ export default function Home() {
         <Separator className="my-4" />
         <div className="flex flex-col gap-12">
           <div className="flex flex-col">
-            <div className="grid grid-cols-1 xl:grid-rows-1 xl:gap-5 gap-2 md:grid-cols-2 xl:grid-cols-4 mt-2 xl:mt-5">
+            <div className="grid grid-cols-1 xl:grid-rows-1 xl:gap-5 gap-2 md:grid-cols-2 xl:grid-cols-3 mt-2 xl:mt-5">
               <FeaturedCard
                 title="Callouts"
                 icon={<BarChart />}
@@ -162,22 +222,40 @@ export default function Home() {
               >
                 <div className="flex flex-col px-6">
                   <div className="flex flex-row">
-                    <div className="text-3xl">3h 23m</div>
-                    <div className="ml-5">In toxic smoke</div>
+                    <div className="text-3xl">
+                      {formatTime(dataCallouts?.exposedToSmokeTime)}
+                    </div>
+                    <div className="ml-5">in smoke</div>
                   </div>
                   <div className="flex justify-between py-4">
                     <div className="text-center mx-4">
-                      <div className="font-bold">5h 56m</div>
-                      <div className="text-sm">In all smoke</div>
+                      <div className="font-bold">
+                        {dataCallouts?.exposedToSmokeCount}
+                      </div>
+                      <div className="text-sm">times</div>
                     </div>
                     <div className="border-r border-dotted" />
                     <div className="text-center mx-4">
-                      <div className="font-bold">23</div>
-                      <div className="text-sm">Times exposed to smoke</div>
-                    </div>
-                    <div className="border-r border-dotted" />
-                    <div className="text-center mx-4">
-                      <div className="font-bold">{6 * 0.00000445}%</div>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="font-bold">
+                              {!isNaN(
+                                parseFloat(dataCallouts?.exposedToSmokeTime)
+                              )
+                                ? `${
+                                    parseFloat(
+                                      dataCallouts?.exposedToSmokeTime
+                                    ) * 0.0000000386
+                                  }%`
+                                : "Invalid value"}
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <TooltipContentText />
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                       <div className="text-sm">Heighten risk of cancer (*)</div>
                     </div>
                   </div>
@@ -192,52 +270,10 @@ export default function Home() {
               >
                 <div className="flex flex-col px-6">
                   <div className="flex flex-row">
-                    <div className="text-5xl">8</div>
-                    <div className="ml-5">Stations</div>
-                  </div>
-                  <div className="flex justify-evenly py-4">
-                    <div className="text-center mx-4">
-                      <div className="text-xl font-bold">5</div>
-                      <div className="text-sm">Full time</div>
-                    </div>
-                    <div className="border-r border-dotted" />
-                    <div className="text-center mx-4">
-                      <div className="text-xl font-bold">3</div>
-                      <div className="text-sm">Part time</div>
-                    </div>
+                    <div className="text-5xl">{stations?.length}</div>
+                    <div className="ml-5">Stations connected</div>
                   </div>
                 </div>
-              </FeaturedCard>
-              <FeaturedCard
-                title="Vehicles"
-                icon={<Truck />}
-                className={
-                  "rounded-[20px] bg-gradient-to-r from-orange-400 to-red-400 w-full"
-                } // Updated class
-              >
-                <div className="flex flex-col px-6">
-                  <div className="flex flex-row">
-                    <div className="text-5xl">60</div>
-                    <div className="ml-5">Vehicles</div>
-                  </div>
-                  <div className="flex justify-evenly py-4">
-                    <div className="text-center mx-4">
-                      <div className="text-xl font-bold">59</div>
-                      <div className="text-sm">Operational vehicles</div>
-                    </div>
-                    <div className="border-r border-dotted" />
-                    <div className="text-center mx-4">
-                      <div className="text-xl font-bold">20</div>
-                      <div className="text-sm">Emergency vehicles</div>
-                    </div>
-                    <div className="border-r border-dotted" />
-                    <div className="text-center mx-4">
-                      <div className="text-xl font-bold">30</div>
-                      <div className="text-sm">Service vehicles</div>
-                    </div>
-                  </div>
-                </div>
-                <div className="flex flex-col px-6"></div>
               </FeaturedCard>
             </div>
           </div>

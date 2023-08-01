@@ -1,7 +1,8 @@
 "use client";
 
 // Import required
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { supabase } from "../../app/supabase";
 
 // Import icons
 import {
@@ -34,6 +35,7 @@ import {
   SelectLabel,
 } from "@/components/ui/select";
 import Progress from "@/components/Loaders/Progress";
+import AutocompleteAddress from "@/components/Maps/Autocomplete";
 
 import {
   Chart as ChartJS,
@@ -66,10 +68,77 @@ export default function Station() {
 
   // States
   const [active, setActive] = useState("Dashboard");
+  const [activeStation, setActiveStation] = useState<any>(null);
+  const [allStations, setAllStations] = useState<any>();
+  const [isStationDropdownOpen, setIsStationDropdownOpen] = useState(false);
+  const [stationUsersCount, setStationUsersCount] = useState<number>();
 
   // Fetching
+  async function fetchStations() {
+    if (session) {
+      const { data, error } = await supabase
+        .from("user_connection_station")
+        .select(
+          `*,
+          station (*)
+    `
+        )
+        .eq("user", session?.user.id);
+
+      if (error) {
+        alert(
+          "There was an error when fetching your stations: " + error.message
+        );
+      } else {
+        setActiveStation(data[0]?.station || null);
+
+        // Create a list of all departments
+        let allStations: any = [];
+        data.forEach((connection) => {
+          allStations.push(connection.station);
+        });
+
+        setAllStations(allStations);
+      }
+    }
+  }
 
   // Functions
+  const handleStationSelect = (station: any) => {
+    setActiveStation(station);
+    setIsStationDropdownOpen(false);
+  };
+
+  // Use effects
+  useEffect(() => {
+    const fetchStationsData = async () => {
+      const data = await fetchStations();
+    };
+
+    fetchStationsData();
+  }, [session]);
+
+  useEffect(() => {
+    // Fetch the user count when the active station changes
+    async function fetchUserCount() {
+      if (activeStation) {
+        const { count, error } = await supabase
+          .from("user_connection_station")
+          .select("count", { count: "exact" })
+          .eq("station", activeStation.id);
+
+        if (error) {
+          alert(
+            "There was an error when fetching the user count: " + error.message
+          );
+        } else {
+          setStationUsersCount(count ? count : 0);
+        }
+      }
+    }
+
+    fetchUserCount();
+  }, [activeStation]);
 
   // Variables
 
@@ -78,20 +147,73 @@ export default function Station() {
     return <Progress />;
   }
 
+  if (!activeStation) {
+    return (
+      <div className="flex flex-col gap-4">
+        <div>
+          You have no stations connected to your user, you can do the following
+          actions:
+        </div>
+        <div className="flex flex-row gap-2 justify-center">
+          <BasicButton
+            state="default"
+            className={active === "Create" ? "bg-indigo-600" : "bg-indigo-400"}
+            onClick={() => setActive("Create")}
+          >
+            <div className="">
+              <div className="flex flex-row gap-2">
+                <div className="hidden md:block">Create new</div>
+              </div>
+            </div>
+          </BasicButton>
+          <BasicButton
+            state="default"
+            className={active === "Join" ? "bg-indigo-600" : "bg-indigo-400"}
+            onClick={() => setActive("Join")}
+          >
+            <div className="">
+              <div className="flex flex-row gap-2">
+                <div className="hidden md:block">Join existing</div>
+              </div>
+            </div>
+          </BasicButton>
+        </div>
+        {active == "Create" && <CreateNew />}
+      </div>
+    );
+  }
+
   return (
     <div className="w-full">
       <div className="flex flex-col lg:flex-row lg:gap-5 gap-2">
         <div className="text-primary text-4xl hidden lg:block">Station</div>
-        <div className="bg-accent7 rounded-full py-2 px-2 text-primary">
-          <div className="flex flex-row gap-2">
-            <Navigation />
-            <div>T7 Løken</div>
+        <div className="flex flex-col gap-1">
+          <div
+            className="bg-accent7 rounded-full py-2 px-2 text-primary hover:cursor-pointer"
+            onClick={() => setIsStationDropdownOpen(!isStationDropdownOpen)}
+          >
+            <div className="flex flex-row gap-2">
+              <Navigation />
+              <div>
+                {activeStation
+                  ? activeStation.code_full + " - " + activeStation.name
+                  : "-"}
+              </div>
+            </div>
           </div>
-        </div>
-        <div className="bg-accent7 rounded-full py-2 px-2 text-primary hidden md:block">
-          <div className="flex flex-row gap-2">
-            <div>Part-time</div>
-          </div>
+          {isStationDropdownOpen && (
+            <div className="mt-2 bg-white rounded-lg shadow-md px-2 py-2">
+              {allStations.map((station: any) => (
+                <div
+                  key={station.id}
+                  className="px-4 py-2 cursor-pointer hover:bg-gray-100"
+                  onClick={() => handleStationSelect(station)}
+                >
+                  {station.code_full + " - " + station.name}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
         <div className="md:hidden">
           <Select onValueChange={(e) => window.location.assign(e)}>
@@ -190,15 +312,18 @@ export default function Station() {
       </div>
       <Separator className="my-4" />
       {active == "Callouts" && <Callouts />}
-      {active == "Dashboard" && <Dashboard />}
+      {active == "Dashboard" && (
+        <Dashboard station={activeStation} stationUsers={stationUsersCount} />
+      )}
       {active == "Stations" && <Stations />}
       {active == "Vehicles" && <Vehicles />}
+      {active == "Create" && <CreateNew />}
       {active == "Settings" && <Settings />}
     </div>
   );
 }
 
-function Dashboard() {
+function Dashboard(data: any) {
   // Variables
   const dataPie = {
     labels: [
@@ -289,19 +414,10 @@ function Dashboard() {
           >
             <div className="flex flex-col px-6 w-full">
               <div className="flex flex-row">
-                <div className="text-5xl">54</div>
+                <div className="text-5xl">
+                  {data?.stationUsers ? data.stationUsers : null}
+                </div>
                 <div className="ml-5">Registered users</div>
-              </div>
-              <div className="flex justify-evenly py-4">
-                <div className="text-center mx-4">
-                  <div className="text-xl font-bold">5</div>
-                  <div className="text-sm">New in the last year</div>
-                </div>
-                <div className="border-r border-dotted" />
-                <div className="text-center mx-4">
-                  <div className="text-xl font-bold">3</div>
-                  <div className="text-sm">Currently online</div>
-                </div>
               </div>
             </div>
           </FeaturedCard>
@@ -455,6 +571,282 @@ function Settings() {
           </Select>
         </div>
       </div>
+    </div>
+  );
+}
+
+function CreateNew() {
+  // Auth
+  const { session } = useSession();
+
+  // States
+  const [disableNext, setDisableNext] = useState(false);
+  const [name, setName] = useState("");
+  const [nameError, setNameError] = useState(false);
+  const [nameErrorText, setNameErrorText] = useState("");
+  const [addressError, setAddressError] = useState(false);
+  const [addressErrorText, setAddressErrorText] = useState("");
+  const [code, setCode] = useState("");
+  const [codeError, setCodeError] = useState(false);
+  const [codeErrorText, setCodeErrorText] = useState("");
+  const [lat, setLat] = useState<any>(null);
+  const [lng, setLng] = useState<any>(null);
+  const [address, setAddress] = useState<any>(null);
+  const [zip, setZip] = useState<any>(null);
+  const [activeDepartment, setActiveDepartment] = useState<any>();
+  const [allDepartments, setAllDepartments] = useState<any>();
+
+  // Fetching
+  async function fetchDeparments() {
+    if (session) {
+      const { data, error } = await supabase
+        .from("user_connection_department")
+        .select(
+          `*,
+          department (*)
+    `
+        )
+        .eq("user", session?.user.id);
+
+      if (error) {
+        alert(
+          "There was an error when fetching your departments: " + error.message
+        );
+      } else {
+        setActiveDepartment(data[0].department || null);
+
+        // Create a list of all departments
+        let allDepartments: any = [];
+        data.forEach((connection) => {
+          allDepartments.push(connection.department);
+        });
+
+        setAllDepartments(allDepartments);
+      }
+    }
+  }
+
+  // Functions
+  function generateInviteCode(length: number) {
+    const characters =
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    let inviteCode = "";
+
+    for (let i = 0; i < length; i++) {
+      const randomIndex = Math.floor(Math.random() * characters.length);
+      inviteCode += characters.charAt(randomIndex);
+    }
+
+    return inviteCode;
+  }
+
+  async function onNameInput(e: any) {
+    // This function will trigger for all characters in the name state as they are typed into the name input field. This will be used to check for duplicates
+    // as the users write
+    setName(e.target.value);
+
+    const { data, error } = await supabase
+      .from("departments")
+      .select()
+      .ilike("name", "%" + e.target.value + "%");
+
+    if (data) {
+      if (data.length > 0) {
+        setNameError(true);
+        setNameErrorText("This name allready exists..");
+        setDisableNext(true);
+      } else if (nameError) {
+        setNameError(false);
+        setDisableNext(false);
+      }
+    }
+  }
+
+  async function validatePageOne() {
+    let hasErrors = false;
+
+    if (name.length < 3) {
+      setNameError(true);
+      setNameErrorText("The name must be at least 3 characters long");
+      hasErrors = true;
+    } else {
+      setNameError(false);
+    }
+
+    if (code.length === 0) {
+      setCodeError(true);
+      setCodeErrorText("The code must not be empty");
+      hasErrors = true;
+    } else {
+      setCodeError(false);
+    }
+
+    if (!address) {
+      setAddressError(true);
+      setAddressErrorText(
+        "Failed to get the address, please check the address field"
+      );
+
+      if (!address) {
+        console.log("missing address");
+      }
+
+      hasErrors = true;
+    } else {
+      setAddressError(false);
+      setAddressErrorText("");
+    }
+
+    if (!hasErrors) {
+      const { data, error } = await supabase
+        .from("stations")
+        .insert({
+          name: name,
+          address: address,
+          zip: zip ? zip : null,
+          latitude: lat ? lat : null,
+          longitude: lng ? lat : null,
+          code_prefix: activeDepartment.code_prefix,
+          code_full: activeDepartment.code_prefix + code,
+          code: code,
+          created_by: session.user.id,
+          invite_code: generateInviteCode(6),
+          department: activeDepartment.id,
+        })
+        .select();
+
+      if (error) {
+        alert("Something went wrong. Error: " + error.message);
+        console.log(error);
+      } else {
+        const { data: dataConnection, error: errorConnection } = await supabase
+          .from("user_connection_station")
+          .insert({
+            station: data[0].id,
+            user: session.user.id,
+          });
+
+        if (errorConnection) {
+          alert("Something went wrong. Error: " + errorConnection.message);
+          console.log(error);
+        } else {
+          window.location.reload();
+        }
+      }
+    }
+  }
+
+  const handleAddressSelect = (
+    lat: any,
+    lng: any,
+    formattedAddress: string,
+    zip: any
+  ) => {
+    setLat(lat);
+    setLng(lng);
+    setAddress(formattedAddress);
+    setZip(zip);
+  };
+
+  const handleDepartmentSelect = (id: any) => {
+    allDepartments.forEach((department: any) => {
+      if (department.id.toString() === id) {
+        setActiveDepartment(department);
+      }
+    });
+  };
+
+  // Use effects
+  useEffect(() => {
+    const fetchDepartmentsData = async () => {
+      const data = await fetchDeparments();
+    };
+
+    fetchDepartmentsData();
+  }, [session]);
+
+  return (
+    <div className="flex justify-center h-screen">
+      <BasicCard title="Create new" className="w-full md:w-1/2">
+        <div className="flex flex-col">
+          <div>
+            <div className="">
+              <label className="block text-primary">Department</label>
+              <select
+                onChange={(e) => handleDepartmentSelect(e.target.value)}
+                className="w-full px-1 py-1 rounded-[20px] border mb-2"
+                defaultValue={activeDepartment}
+              >
+                {allDepartments?.map((department: any) => {
+                  return (
+                    <option value={department.id} key={department.id}>
+                      {department.name}
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
+            <div className="">
+              <label className="block text-primary">Name</label>
+              <input
+                className="rounded-[20px] text-dark border px-2 w-full"
+                onChange={(e) => onNameInput(e)}
+                defaultValue={name && name}
+              />
+              {nameError ? (
+                <div className="text-xs text-danger">{nameErrorText}</div>
+              ) : null}
+            </div>
+            <div className="mt-2">
+              <label className="block text-primary">Address:</label>
+              <div className="flex flex-col grow w-full">
+                <AutocompleteAddress onAddressSelect={handleAddressSelect} />
+                {addressError ? (
+                  <div className="text-xs text-danger">{addressErrorText}</div>
+                ) : null}
+              </div>
+            </div>
+            <div className="mt-2">
+              <div className="grid grid-cols-3">
+                <div>
+                  <label className="block text-primary">Code prefix</label>
+                  <div>
+                    {activeDepartment?.code_prefix
+                      ? activeDepartment.code_prefix
+                      : "-"}
+                  </div>
+                </div>
+                <div>
+                  <div className="ml-2 flex items-center">Code</div>
+                  <input
+                    className="rounded-[20px] text-dark border px-2 w-1/2"
+                    onChange={(e) => setCode(e.target.value)}
+                    defaultValue={code && code}
+                    placeholder="EX: 7"
+                  />
+                  {codeError ? (
+                    <div className="text-xs text-danger">{codeErrorText}</div>
+                  ) : null}
+                </div>
+                <div>
+                  <label className="block text-primary">Code full</label>
+                  <div>{activeDepartment?.code_prefix + code}</div>
+                </div>
+              </div>
+            </div>
+            <div className="flex flex-row justify-end">
+              <BasicButton
+                state={"success"}
+                className="text-sm mt-2"
+                onClick={() => validatePageOne()}
+                disabled={disableNext}
+              >
+                Validate and Save
+              </BasicButton>
+            </div>
+          </div>
+        </div>
+      </BasicCard>
     </div>
   );
 }
