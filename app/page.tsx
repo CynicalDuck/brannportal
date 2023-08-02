@@ -177,7 +177,7 @@ export default function Home() {
         <Separator className="my-4" />
         <div className="flex flex-col gap-12">
           <div className="flex flex-col">
-            <div className="grid grid-cols-1 xl:grid-rows-1 xl:gap-5 gap-2 md:grid-cols-2 xl:grid-cols-3 mt-2 xl:mt-5">
+            <div className="grid grid-cols-1 xl:grid-rows-1 xl:gap-5 gap-2 md:grid-cols-1 lg:grid-cols-3 xl:grid-cols-3 mt-2 xl:mt-5">
               <FeaturedCard
                 title="Callouts"
                 icon={<BarChart />}
@@ -280,8 +280,8 @@ export default function Home() {
               </FeaturedCard>
             </div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+            <div className="h-[300px] md:h-[600px] xl:h-full">
               <MapCallouts
                 center={stations ? stations[0]?.station : null}
                 heatmap
