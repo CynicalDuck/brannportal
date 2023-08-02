@@ -26,6 +26,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import MapCallouts from "@/components/Maps/MapCallouts";
 
 // Import hooks
 import { useSession } from "@/hooks/authentication/useSession";
@@ -107,6 +108,8 @@ export default function Home() {
     </div>
   );
 
+  //console.log(stations[0]);
+
   // Returns
 
   if (!session) {
@@ -179,7 +182,7 @@ export default function Home() {
                 title="Callouts"
                 icon={<BarChart />}
                 className={
-                  "rounded-[20px] bg-gradient-to-r from-accent5 to-accent4 w-full"
+                  "rounded-[20px] bg-gradient-to-r from-gray-500 to-gray-700 w-full"
                 }
               >
                 <div className="flex flex-col px-6">
@@ -217,8 +220,8 @@ export default function Home() {
                 title="Smoke exposure"
                 icon={<Users />}
                 className={
-                  "rounded-[20px] bg-gradient-to-r from-blue-400 to-blue-500 w-full"
-                } // Updated class
+                  "rounded-[20px] bg-gradient-to-r from-gray-500 to-gray-700 w-full"
+                }
               >
                 <div className="flex flex-col px-6">
                   <div className="flex flex-row">
@@ -265,8 +268,8 @@ export default function Home() {
                 title="Stations"
                 icon={<Navigation />}
                 className={
-                  "rounded-[20px] bg-gradient-to-r from-green-400 to-green-500 w-full"
-                } // Updated class
+                  "rounded-[20px] bg-gradient-to-r from-gray-500 to-gray-700 w-full"
+                }
               >
                 <div className="flex flex-col px-6">
                   <div className="flex flex-row">
@@ -277,7 +280,16 @@ export default function Home() {
               </FeaturedCard>
             </div>
           </div>
-          <TableCallout data={dataCallouts?.data} />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <MapCallouts
+                center={stations ? stations[0]?.station : null}
+                heatmap
+                heatmapLocations={dataCallouts?.data}
+              />
+            </div>
+            <TableCallout data={dataCallouts?.data} />
+          </div>
         </div>
       </div>
     </main>

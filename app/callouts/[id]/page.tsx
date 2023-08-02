@@ -2,13 +2,20 @@
 
 // Import required
 import React, { useState, useEffect } from "react";
-import { supabase } from "../../app/supabase";
+import { supabase } from "../../../app/supabase";
 
 // Import icons
-import { Plus } from "react-feather";
+import {
+  Navigation2,
+  Calendar,
+  Navigation,
+  Box,
+  PenTool,
+  Map,
+} from "react-feather";
 
 // Import components
-import TableCallout from "@/components/Tables/TableCallout";
+import FeaturedCard from "@/components/Cards/FeaturedCard";
 import {
   Select,
   SelectContent,
@@ -19,84 +26,249 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import AutocompleteAddress from "@/components/Maps/Autocomplete";
+import MapCallouts from "@/components/Maps/MapCallouts";
 
 // Import hooks
 import { useSession } from "@/hooks/authentication/useSession";
 import { useFetchUserCallouts } from "@/hooks/fetch/useFetchUserCallouts";
 
-export default function Callouts() {
+export default function CalloutDetails({ params }: { params: { id: string } }) {
   // States
-  const [createNew, setCreateNew] = useState(false);
+  const [activeCallout, setActiveCallout] = useState<any>(null);
+  const [connections, setConnections] = useState<any>(null);
+  const [edit, setEdit] = useState(false);
 
   // Auth
   const { session } = useSession();
 
   // Fetch
-  const { data: dataCallouts, error: errorCallouts } = useFetchUserCallouts();
+  async function fetchCallout() {
+    if (session) {
+      // Get details
+      const { data, error } = await supabase
+        .from("callouts")
+        .select(`*,station(*), department(*)`)
+        .eq("id", params.id);
+
+      if (error) {
+        alert("There was an error when fetching the callout: " + error.message);
+      } else {
+        setActiveCallout(data[0] || null);
+      }
+
+      // Get all connections
+      const { data: dataConn, error: errorConn } = await supabase
+        .from("user_connection_callout")
+        .select(`*`)
+        .eq("user", session?.user.id)
+        .eq("callout", params.id);
+
+      if (errorConn) {
+        alert(
+          "There was an error when fetching the callout: " + errorConn.message
+        );
+      } else {
+        setConnections(dataConn || null);
+      }
+    }
+  }
 
   // Functions
 
+  // Use Effects
+  useEffect(() => {
+    const fetchCalloutData = async () => {
+      const data = await fetchCallout();
+    };
+
+    fetchCalloutData();
+  }, [session]);
+
   // Return
-  return (
-    <div className="flex flex-col gap-2 h-screen md:h-full lg:h-full">
-      <div className="text-primary text-4xl hidden lg:block">Callouts</div>
-      <div className="flex flex-row gap-2 hover:cursor-pointer">
-        <div
-          className="bg-white flex flex-row px-2 rounded-[20px]"
-          onClick={() => setCreateNew(!createNew)}
-        >
-          {!createNew && <Plus />}
-          <div className="hidden lg:block">
-            {!createNew ? "Create new" : "Cancel"}
+  if (connections?.length > 0) {
+    return (
+      <div className="flex flex-col gap-2 h-screen md:h-full lg:h-full">
+        <div className="text-primary text-4xl hidden lg:block">
+          {activeCallout
+            ? activeCallout.callout_id
+              ? "[" + activeCallout.callout_id + "] " + activeCallout.type
+              : "[" + activeCallout.id + "] " + activeCallout.type
+            : "Callout details"}
+        </div>
+        <div className="flex flex-row gap-2 hover:cursor-pointer">
+          <div
+            className="bg-white flex flex-row px-2 rounded-[20px]"
+            onClick={() => setEdit(!edit)}
+          >
+            <div className="hidden lg:block">{!edit ? "Edit" : "Cancel"}</div>
           </div>
         </div>
-      </div>
-      <div className="lg:flex lg:justify-end lg:gap-2">
-        <div className="md:hidden">
-          <Select onValueChange={(e) => window.location.assign(e)}>
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Menu" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                <SelectLabel>Pages</SelectLabel>
-                <SelectItem value="/">Home</SelectItem>
-                <SelectItem value="callouts" disabled>
-                  Callouts
-                </SelectItem>
-                <SelectItem value="department">Department</SelectItem>
-                <SelectItem value="station">Station</SelectItem>
-                <SelectItem value="settings">Settings</SelectItem>
-                <SelectItem value="authentication/logout">Sign out</SelectItem>
-              </SelectGroup>
-            </SelectContent>
-          </Select>
+        <div className="lg:flex lg:justify-end lg:gap-2">
+          <div className="md:hidden">
+            <Select onValueChange={(e) => window.location.assign(e)}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Menu" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectLabel>Pages</SelectLabel>
+                  <SelectItem value="/">Home</SelectItem>
+                  <SelectItem value="callouts" disabled>
+                    Callouts
+                  </SelectItem>
+                  <SelectItem value="department">Department</SelectItem>
+                  <SelectItem value="station">Station</SelectItem>
+                  <SelectItem value="settings">Settings</SelectItem>
+                  <SelectItem value="authentication/logout">
+                    Sign out
+                  </SelectItem>
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        {/* Use flex-grow to let TableCallout take up remaining space */}
+        <div className="flex-grow w-full">
+          {!edit && activeCallout && (
+            <Dashboard callout={activeCallout ? activeCallout : null} />
+          )}
+          {edit && <Edit callout={activeCallout ? activeCallout : null} />}
         </div>
       </div>
-      {/* Use flex-grow to let TableCallout take up remaining space */}
-      <div className="flex-grow w-full">
-        {!createNew && <TableCallout data={dataCallouts?.data} />}
-        {createNew && <CreateNew />}
+    );
+  }
+  return (
+    <div>
+      Checking access to this callout.. If the callout failes to load you might
+      not have the access rights to it.
+    </div>
+  );
+}
+
+function Dashboard(data: any) {
+  // States
+
+  // Functions
+  const formatDateAndTime = (dateTimeString: any) => {
+    const dateTime = new Date(dateTimeString);
+    const day = String(dateTime.getMonth() + 1).padStart(2, "0");
+    const month = String(dateTime.getDate()).padStart(2, "0");
+    const year = String(dateTime.getFullYear()).slice(2);
+    const hours = String(dateTime.getHours()).padStart(2, "0");
+    const minutes = String(dateTime.getMinutes()).padStart(2, "0");
+
+    return `${month}.${day}.${year} - ${hours}:${minutes}`;
+  };
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <FeaturedCard
+          title="Date"
+          icon={<Calendar />}
+          className={
+            "rounded-[20px] bg-gradient-to-r from-gray-500 to-gray-700 w-full"
+          }
+        >
+          <div className="flex flex-col px-6">
+            <div className="flex flex-row">
+              <div className="">
+                {formatDateAndTime(
+                  data.callout.date_start + " " + data.callout.time_start
+                )}
+              </div>
+            </div>
+          </div>
+        </FeaturedCard>
+        <FeaturedCard
+          title="Address"
+          icon={<Map />}
+          className={
+            "rounded-[20px] bg-gradient-to-r from-gray-500 to-gray-700 w-full"
+          }
+        >
+          <div className="flex flex-col px-6">
+            <div className="flex flex-row">
+              <div className="">{data.callout.address}</div>
+            </div>
+          </div>
+        </FeaturedCard>
+        <FeaturedCard
+          title="Department"
+          icon={<Box />}
+          className={
+            "rounded-[20px] bg-gradient-to-r from-gray-500 to-gray-700 w-full"
+          }
+        >
+          <div className="flex flex-col px-6">
+            <div className="flex flex-row">
+              <div className="">{data.callout.department.name}</div>
+            </div>
+          </div>
+        </FeaturedCard>
+        <FeaturedCard
+          title="Station"
+          icon={<Navigation />}
+          className={
+            "rounded-[20px] bg-gradient-to-r from-gray-500 to-gray-700 w-full"
+          }
+        >
+          <div className="flex flex-col px-6">
+            <div className="flex flex-row">
+              <div className="">
+                {data.callout.station.code_full +
+                  " - " +
+                  data.callout.station.name}
+              </div>
+            </div>
+          </div>
+        </FeaturedCard>
+      </div>
+      {data.callout.description ? (
+        <div>
+          <FeaturedCard
+            title="Description"
+            icon={<PenTool />}
+            className={
+              "rounded-[20px] bg-gradient-to-r from-slate-400 to-slate-500 w-full"
+            }
+          >
+            <div className="flex flex-col px-6">
+              <div className="flex flex-row">
+                <div className="">{data.callout.description}</div>
+              </div>
+            </div>
+          </FeaturedCard>
+        </div>
+      ) : null}
+      <div className="grid grid-cols-1 md:grid-cols-1 gap-4 h-full">
+        <div className="h-[300px] md:h-[600px] w-full">
+          <MapCallouts center={data.callout ? data.callout : null} single />
+        </div>
       </div>
     </div>
   );
 }
 
-function CreateNew() {
+function Edit(data: any) {
   // States for form inputs and validation
-  const [type, setType] = useState("");
-  const [description, setDescription] = useState("");
-  const [dateStart, setDateStart] = useState("");
-  const [timeStart, setTimeStart] = useState("");
-  const [dateEnd, setDateEnd] = useState("");
-  const [timeEnd, setTimeEnd] = useState("");
-  const [lat, setLat] = useState<any>(null);
-  const [lng, setLng] = useState<any>(null);
-  const [address, setAddress] = useState<any>(null);
+  const [type, setType] = useState(data.callout.type);
+  const [description, setDescription] = useState(data.callout.description);
+  const [dateStart, setDateStart] = useState(data.callout.date_start);
+  const [timeStart, setTimeStart] = useState(data.callout.time_start);
+  const [dateEnd, setDateEnd] = useState(data.callout.date_end);
+  const [timeEnd, setTimeEnd] = useState(data.callout.time_end);
+  const [lat, setLat] = useState<any>(data.callout.latitude);
+  const [lng, setLng] = useState<any>(data.callout.longitude);
+  const [address, setAddress] = useState<any>(data.callout.address);
   const [zip, setZip] = useState<any>(null);
-  const [exposedToSmoke, setExposedToSmoke] = useState(false);
-  const [exposedToSmokeTime, setExposedToSmokeTime] = useState("");
-  const [calloutId, setCalloutId] = useState("");
+  const [exposedToSmoke, setExposedToSmoke] = useState(
+    data.callout.exposed_to_smoke
+  );
+  const [exposedToSmokeTime, setExposedToSmokeTime] = useState(
+    data.callout.exposed_to_smoke_time
+  );
+  const [calloutId, setCalloutId] = useState(data.callout.callout_id);
   const [activeDepartment, setActiveDepartment] = useState<any>();
   const [allDepartments, setAllDepartments] = useState<any>();
   const [departmentTypes, setDepartmentTypes] = useState<any>();
@@ -253,9 +425,10 @@ function CreateNew() {
 
     // If there are no errors, submit the form
     if (Object.keys(errors).every((key) => errors[key] === "")) {
-      const { data, error } = await supabase
+      console.log(lng);
+      const { data: dataUpdate, error: errorUpdate } = await supabase
         .from("callouts")
-        .insert({
+        .update({
           type: type,
           address: address,
           zip: zip ? zip : null,
@@ -273,25 +446,13 @@ function CreateNew() {
           exposed_to_smoke: exposedToSmoke,
           exposed_to_smoke_time: exposedToSmokeTime ? exposedToSmokeTime : null,
         })
-        .select();
+        .eq("id", data.callout.id);
 
-      if (error) {
-        alert("Something went wrong. Error: " + error.message);
-        console.log(error);
+      if (errorUpdate) {
+        alert("Something went wrong. Error: " + errorUpdate.message);
+        console.log(errorUpdate);
       } else {
-        const { data: dataConnection, error: errorConnection } = await supabase
-          .from("user_connection_callout")
-          .insert({
-            callout: data[0].id,
-            user: session.user.id,
-          });
-
-        if (errorConnection) {
-          alert("Something went wrong. Error: " + errorConnection.message);
-          console.log(error);
-        } else {
-          window.location.reload();
-        }
+        window.location.reload();
       }
     }
   }
@@ -454,6 +615,9 @@ function CreateNew() {
         <div className="mb-4">
           <label className="block text-primary font-semibold">Address</label>
           <AutocompleteAddress onAddressSelect={handleAddressSelect} />
+          <div className="text-xs mt-2">
+            {"Current: " + data.callout.address}
+          </div>
           {formErrors.address && (
             <div className="text-danger">{formErrors.address}</div>
           )}

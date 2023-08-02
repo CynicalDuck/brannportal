@@ -26,7 +26,7 @@ export default function FeaturedCard({
       <div className="flex flex-col gap-2">
         <div className="flex grow flex-row py-4 px-4">
           <div className="flex grow justify-start text-white">
-            <div>{title}</div>
+            <div className=" underline underline-offset-8">{title}</div>
           </div>
           <div className="flex grow justify-end text-white">
             {icon ? icon : null}

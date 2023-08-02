@@ -33,17 +33,17 @@ export default function TableCallout({
   ...props
 }: Props) {
   // States
-  const [itemsToShow, setItemsToShow] = useState(5);
+  const [itemsToShow, setItemsToShow] = useState(10);
 
   // Fetching
 
   // Functions
   const handleSeeMore = () => {
     // Set itemsToShow to a large number (e.g., data.length) to show all items
-    if (itemsToShow === 5) {
+    if (itemsToShow === 10) {
       setItemsToShow(data.length);
     } else {
-      setItemsToShow(5);
+      setItemsToShow(10);
     }
   };
 
@@ -84,7 +84,7 @@ export default function TableCallout({
           <TableRow>
             <TableHead className="w-[100px]">Callout</TableHead>
             <TableHead className="w-[300px]">Category</TableHead>
-            <TableHead className="w-[700px]">Resources</TableHead>
+            <TableHead className="w-[700px]">Address</TableHead>
             <TableHead className="w-[300px]">Time</TableHead>
           </TableRow>
         </TableHeader>
@@ -93,6 +93,9 @@ export default function TableCallout({
             <TableRow
               key={callout.callout.id}
               className="hover:bg-light hover:cursor-pointer"
+              onClick={() =>
+                (window.location.href = "callouts/" + callout.callout.id)
+              }
             >
               <TableCell className="font-medium">
                 {callout.callout.callout_id
@@ -102,14 +105,7 @@ export default function TableCallout({
               <TableCell>{callout.callout.type}</TableCell>
               <TableCell>
                 <div className="flex flex-row gap-2">
-                  {callout.callout.resources?.map((resource: any) => (
-                    <div
-                      key={resource}
-                      className="bg-warning px-2 rounded-[15px]"
-                    >
-                      {resource}
-                    </div>
-                  ))}
+                  {callout.callout.address}
                 </div>
               </TableCell>
               <TableCell>{callout.callout.date_start}</TableCell>
@@ -117,21 +113,23 @@ export default function TableCallout({
           ))}
         </TableBody>
       </Table>
-      {itemsToShow < data?.length ? (
-        <div
-          className="text-primary cursor-pointer text-sm text-left"
-          onClick={handleSeeMore}
-        >
-          See More
-        </div>
-      ) : (
-        <div
-          className="text-primary cursor-pointer text-sm text-left"
-          onClick={handleSeeMore}
-        >
-          See less
-        </div>
-      )}
+      {data?.length > 0 ? (
+        itemsToShow < data?.length ? (
+          <div
+            className="text-primary cursor-pointer text-sm text-left"
+            onClick={handleSeeMore}
+          >
+            See More
+          </div>
+        ) : (
+          <div
+            className="text-primary cursor-pointer text-sm text-left"
+            onClick={handleSeeMore}
+          >
+            See less
+          </div>
+        )
+      ) : null}
     </div>
   );
 }

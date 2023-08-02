@@ -390,7 +390,7 @@ function Dashboard(department: any) {
             title="Callouts"
             icon={<BarChart />}
             className={
-              "rounded-[20px] bg-gradient-to-r from-accent5 to-accent4"
+              "rounded-[20px] bg-gradient-to-r from-gray-500 to-gray-700 w-full"
             }
           >
             <div className="flex flex-col px-6 w-full">
@@ -420,7 +420,7 @@ function Dashboard(department: any) {
             title="Users"
             icon={<Users />}
             className={
-              "rounded-[20px] bg-gradient-to-r from-blue-400 to-blue-500"
+              "rounded-[20px] bg-gradient-to-r from-gray-500 to-gray-700 w-full"
             }
           >
             <div className="flex flex-col px-6 w-full">
@@ -436,7 +436,7 @@ function Dashboard(department: any) {
             title="Stations"
             icon={<Navigation />}
             className={
-              "rounded-[20px] bg-gradient-to-r from-green-400 to-green-500"
+              "rounded-[20px] bg-gradient-to-r from-gray-500 to-gray-700 w-full"
             }
           >
             <div className="flex flex-col px-6 w-full">
@@ -461,7 +461,7 @@ function Dashboard(department: any) {
             title="Vehicles"
             icon={<Truck />}
             className={
-              "rounded-[20px] bg-gradient-to-r from-orange-400 to-red-400"
+              "rounded-[20px] bg-gradient-to-r from-gray-500 to-gray-700 w-full"
             }
           >
             <div className="flex flex-col px-6 w-full">

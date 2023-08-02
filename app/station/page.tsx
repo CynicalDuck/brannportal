@@ -379,7 +379,7 @@ function Dashboard(data: any) {
             title="Callouts"
             icon={<BarChart />}
             className={
-              "rounded-[20px] bg-gradient-to-r from-accent5 to-accent4"
+              "rounded-[20px] bg-gradient-to-r from-gray-500 to-gray-700 w-full"
             }
           >
             <div className="flex flex-col px-6 w-full">
@@ -409,7 +409,7 @@ function Dashboard(data: any) {
             title="Users"
             icon={<Users />}
             className={
-              "rounded-[20px] bg-gradient-to-r from-blue-400 to-blue-500"
+              "rounded-[20px] bg-gradient-to-r from-gray-500 to-gray-700 w-full"
             }
           >
             <div className="flex flex-col px-6 w-full">
@@ -425,7 +425,7 @@ function Dashboard(data: any) {
             title="Stations"
             icon={<Navigation />}
             className={
-              "rounded-[20px] bg-gradient-to-r from-green-400 to-green-500"
+              "rounded-[20px] bg-gradient-to-r from-gray-500 to-gray-700 w-full"
             }
           >
             <div className="flex flex-col px-6 w-full">
@@ -450,7 +450,7 @@ function Dashboard(data: any) {
             title="Vehicles"
             icon={<Truck />}
             className={
-              "rounded-[20px] bg-gradient-to-r from-orange-400 to-red-400"
+              "rounded-[20px] bg-gradient-to-r from-gray-500 to-gray-700 w-full"
             }
           >
             <div className="flex flex-col px-6 w-full">
@@ -705,7 +705,7 @@ function CreateNew() {
           address: address,
           zip: zip ? zip : null,
           latitude: lat ? lat : null,
-          longitude: lng ? lat : null,
+          longitude: lng ? lng : null,
           code_prefix: activeDepartment.code_prefix,
           code_full: activeDepartment.code_prefix + code,
           code: code,
