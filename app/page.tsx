@@ -30,7 +30,6 @@ import MapCallouts from "@/components/Maps/MapCallouts";
 
 // Import hooks
 import { useSession } from "@/hooks/authentication/useSession";
-import { useFetch } from "@/hooks/fetch/useFetch";
 import { useFetchUserCallouts } from "@/hooks/fetch/useFetchUserCallouts";
 
 // Import Icons
@@ -280,9 +279,10 @@ export default function Home() {
                 center={stations ? stations[0]?.station : null}
                 markers={true}
                 markerData={dataCallouts?.data}
+                description
               />
             </div>
-            <TableCallout data={dataCallouts?.data} />
+            <TableCallout data={dataCallouts?.data} address />
           </div>
         </div>
       </div>

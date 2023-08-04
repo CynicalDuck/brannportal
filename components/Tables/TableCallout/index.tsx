@@ -24,16 +24,28 @@ interface Props {
   children?: React.ReactNode;
   title?: string | null;
   data?: any | null;
+  address?: true | false;
 }
 
 export default function TableCallout({
   children,
   title,
   data,
+  address,
   ...props
 }: Props) {
   // States
   const [itemsToShow, setItemsToShow] = useState(10);
+  const [items, setItems] = useState([]);
+
+  var tableData: any = [];
+  if (data) {
+    data.forEach((item: any) => {
+      if (item.callout) {
+        tableData.push(item.callout);
+      } else tableData.push(item);
+    });
+  }
 
   // Fetching
 
@@ -47,33 +59,16 @@ export default function TableCallout({
     }
   };
 
-  // Variables - Mock data
-  const callouts = [
-    {
-      callout: "INV001",
-      category: "Brann i Bygning",
-      resources: ["T7-1", "T7-4", "T6-1", "T6-4", "T01"],
-      time: "24.06.23T13:00:23",
-    },
-    {
-      callout: "INV002",
-      category: "Brann i Bygning",
-      resources: ["T7-1", "T7-4", "T6-1", "T6-4", "T01"],
-      time: "24.06.23T13:00:23",
-    },
-    {
-      callout: "INV003",
-      category: "Brann i Bygning",
-      resources: ["T7-1", "T7-4", "T6-1", "T6-4", "T01"],
-      time: "24.06.23T13:00:23",
-    },
-    {
-      callout: "INV004",
-      category: "Brann i Bygning",
-      resources: ["T7-1", "T7-4", "T6-1", "T6-4", "T01"],
-      time: "24.06.23T13:00:23",
-    },
-  ];
+  const formatDateAndTime = (dateTimeString: any) => {
+    const dateTime = new Date(dateTimeString);
+    const day = String(dateTime.getMonth() + 1).padStart(2, "0");
+    const month = String(dateTime.getDate()).padStart(2, "0");
+    const year = String(dateTime.getFullYear()).slice(2);
+    const hours = String(dateTime.getHours()).padStart(2, "0");
+    const minutes = String(dateTime.getMinutes()).padStart(2, "0");
+
+    return `${month}.${day}.${year} - ${hours}:${minutes}`;
+  };
 
   // Return
   return (
@@ -84,31 +79,31 @@ export default function TableCallout({
           <TableRow>
             <TableHead className="w-[100px]">Callout</TableHead>
             <TableHead className="w-[300px]">Category</TableHead>
-            <TableHead className="w-[700px]">Address</TableHead>
+            {address && <TableHead className="w-[700px]">Address</TableHead>}
             <TableHead className="w-[300px]">Time</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {data?.slice(0, itemsToShow).map((callout: any) => (
+          {tableData?.slice(0, itemsToShow).map((callout: any) => (
             <TableRow
-              key={callout.callout.id}
+              key={callout?.id}
               className="hover:bg-light hover:cursor-pointer"
-              onClick={() =>
-                (window.location.href = "callouts/" + callout.callout.id)
-              }
+              onClick={() => (window.location.href = "callouts/" + callout?.id)}
             >
               <TableCell className="font-medium">
-                {callout.callout.callout_id
-                  ? callout.callout.callout_id
-                  : callout.callout.id}
+                {callout?.callout_id ? callout?.callout_id : callout?.id}
               </TableCell>
-              <TableCell>{callout.callout.type}</TableCell>
+              <TableCell>{callout?.type}</TableCell>
+              {address && (
+                <TableCell>
+                  <div className="flex flex-row gap-2">{callout?.address}</div>
+                </TableCell>
+              )}
               <TableCell>
-                <div className="flex flex-row gap-2">
-                  {callout.callout.address}
-                </div>
+                {formatDateAndTime(
+                  callout.date_start + " " + callout.time_start
+                )}
               </TableCell>
-              <TableCell>{callout.callout.date_start}</TableCell>
             </TableRow>
           ))}
         </TableBody>

@@ -38,6 +38,7 @@ interface Props {
   heatmapLocations?: any;
   markers?: true | false;
   markerData?: any;
+  description?: true | false;
 }
 
 export default function MapCallouts({
@@ -49,6 +50,7 @@ export default function MapCallouts({
   heatmapLocations,
   markers,
   markerData,
+  description,
   ...props
 }: Props) {
   // States
@@ -131,8 +133,16 @@ export default function MapCallouts({
       heatmapLocations?.forEach((location: any) => {
         locationArray.push(
           new google.maps.LatLng(
-            parseFloat(location.callout.latitude),
-            parseFloat(location.callout.longitude)
+            parseFloat(
+              location.callout?.latitude
+                ? location.callout.latitude
+                : location.latitude
+            ),
+            parseFloat(
+              location.callout?.longitude
+                ? location.callout.longitude
+                : location.longitude
+            )
           )
         );
       });
@@ -149,7 +159,7 @@ export default function MapCallouts({
     <div className="w-full h-[94%] rounded-[20px] overflow-hidden">
       <GoogleMap
         options={mapOptions}
-        zoom={14}
+        zoom={10}
         center={mapCenter ? mapCenter : mapCenterDefault}
         mapTypeId={google.maps.MapTypeId.ROADMAP}
         mapContainerStyle={{ width: "100%", height: "100%" }}
@@ -158,7 +168,12 @@ export default function MapCallouts({
         {heatmap ? (
           heatmapData ? (
             <div>
-              <HeatmapLayer data={heatmapData} />
+              <HeatmapLayer
+                data={heatmapData}
+                options={{
+                  radius: 30,
+                }}
+              />
             </div>
           ) : null
         ) : null}
@@ -170,8 +185,16 @@ export default function MapCallouts({
                     title="Test"
                     position={
                       new google.maps.LatLng(
-                        parseFloat(data.callout.latitude),
-                        parseFloat(data.callout.longitude)
+                        parseFloat(
+                          data.callout?.latitude
+                            ? data.callout.latitude
+                            : data.latitude
+                        ),
+                        parseFloat(
+                          data.callout?.longitude
+                            ? data.callout.longitude
+                            : data.longitude
+                        )
                       )
                     }
                     onClick={() => handleMarkerClick(data)}
@@ -180,8 +203,16 @@ export default function MapCallouts({
                     <InfoWindowF
                       position={
                         new google.maps.LatLng(
-                          parseFloat(data.callout.latitude),
-                          parseFloat(data.callout.longitude)
+                          parseFloat(
+                            data.callout?.latitude
+                              ? data.callout.latitude
+                              : data.latitude
+                          ),
+                          parseFloat(
+                            data.callout?.longitude
+                              ? data.callout.longitude
+                              : data.longitude
+                          )
                         )
                       }
                       onCloseClick={() => setSelectedMarker(null)} // Close the info window when clicked on close button
@@ -189,26 +220,39 @@ export default function MapCallouts({
                       <div className="flex flex-col gap-2 text-xs">
                         <div className="flex flex-row gap-2">
                           <div className="">
-                            {"[" +
-                              selectedMarker.callout.station.code_full +
-                              "]"}
+                            {selectedMarker.callout?.station &&
+                              selectedMarker.callout?.station.code_full}
+                            {selectedMarker?.station &&
+                              selectedMarker?.station.code_full}
                           </div>
                           <div>
-                            {formatDateAndTime(
-                              selectedMarker.callout.date_start +
-                                " " +
-                                selectedMarker.callout.time_start
-                            )}
+                            {selectedMarker.callout?.date_start
+                              ? formatDateAndTime(
+                                  selectedMarker.callout?.date_start +
+                                    " " +
+                                    selectedMarker.callout?.time_start
+                                )
+                              : formatDateAndTime(
+                                  selectedMarker.date_start +
+                                    " " +
+                                    selectedMarker.time_start
+                                )}
                           </div>
                           <div className="font-semibold">
-                            {selectedMarker.callout.type}
+                            {selectedMarker.callout?.type
+                              ? selectedMarker.callout?.type
+                              : selectedMarker.type}
                           </div>
                         </div>
-                        <div>
-                          {selectedMarker.callout.description
-                            ? selectedMarker.callout.description
-                            : null}
-                        </div>
+                        {description && (
+                          <div>
+                            {selectedMarker.callout?.description
+                              ? selectedMarker.callout?.description
+                              : selectedMarker.description
+                              ? selectedMarker.description
+                              : null}
+                          </div>
+                        )}
                       </div>
                     </InfoWindowF>
                   ) : null}

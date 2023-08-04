@@ -75,7 +75,7 @@ export default function Callouts() {
       </div>
       {/* Use flex-grow to let TableCallout take up remaining space */}
       <div className="flex-grow w-full">
-        {!createNew && <TableCallout data={dataCallouts?.data} />}
+        {!createNew && <TableCallout data={dataCallouts?.data} address />}
         {createNew && <CreateNew />}
       </div>
     </div>

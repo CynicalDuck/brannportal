@@ -38,6 +38,7 @@ import {
 } from "@/components/ui/select";
 import Progress from "@/components/Loaders/Progress";
 import AutocompleteAddress from "@/components/Maps/Autocomplete";
+import MapCallouts from "@/components/Maps/MapCallouts";
 
 import {
   Chart as ChartJS,
@@ -61,7 +62,7 @@ ChartJS.register(
 
 // Import hooks
 import { useSession } from "@/hooks/authentication/useSession";
-import { useToast } from "@/components/ui/use-toast";
+import { useFetchDepartmentCallouts } from "@/hooks/fetch/useFetchDepartmentCallouts";
 
 // Types
 
@@ -76,9 +77,13 @@ export default function Department() {
   const [isDepartmentDropdownOpen, setIsDepartmentDropdownOpen] =
     useState(false);
   const [departmentUsersCount, setDepartmentUsersCount] = useState<number>();
+  const [departmentCallouts, setDepartmentCallouts] = useState<any>();
   const [departmentTypes, setDepartmentTypes] = useState<any>();
+  const [departmentStationCount, setDepartmentStationCount] =
+    useState<number>();
 
   // Fetching
+
   async function fetchDeparments() {
     if (session) {
       const { data, error } = await supabase
@@ -144,6 +149,24 @@ export default function Department() {
       }
     }
 
+    // Fetch station count
+    async function fetchStationCount() {
+      if (activeDepartment) {
+        const { count, error } = await supabase
+          .from("stations")
+          .select("count", { count: "exact" })
+          .eq("department", activeDepartment.id);
+
+        if (error) {
+          alert(
+            "There was an error when fetching the user count: " + error.message
+          );
+        } else {
+          setDepartmentStationCount(count ? count : 0);
+        }
+      }
+    }
+
     // Fetch the callout types when the active department changes
     async function fetchDepartmentCalloutTypes() {
       if (activeDepartment) {
@@ -162,7 +185,97 @@ export default function Department() {
       }
     }
 
+    // Fetch department callouts
+    async function fetchDepartmentCallouts(id: number) {
+      // Fetch all callouts for the department
+      const { data, error } = await supabase
+        .from("callouts")
+        .select(`*, station (*)`)
+        .eq("department", id)
+        .order("date_start", { ascending: false })
+        .order("time_start", { ascending: false });
+
+      if (data) {
+        var returnData = {};
+
+        // Calculate the count of callouts with date_start within the current month
+        const currentDate = new Date();
+        const currentYear = currentDate.getFullYear();
+        const currentMonth = currentDate.getMonth() + 1; // January is 0, so we add 1 to get the correct month number
+
+        const countThisMonth = data.filter(
+          (callout: any) =>
+            new Date(callout.date_start).getFullYear() === currentYear &&
+            new Date(callout.date_start).getMonth() + 1 === currentMonth
+        ).length;
+
+        // Calculate the count of callouts with date_start within the current year
+        const countThisYear = data.filter(
+          (callout: any) =>
+            new Date(callout.date_start).getFullYear() === currentYear
+        ).length;
+
+        // Calculate the count of callouts with date_start within the current day
+        const currentDay = currentDate.getDate(); // Get the day of the current date
+        const countToday = data.filter(
+          (callout: any) =>
+            new Date(callout.date_start).getFullYear() === currentYear &&
+            new Date(callout.date_start).getMonth() + 1 === currentMonth &&
+            new Date(callout.date_start).getDate() === currentDay
+        ).length;
+
+        // Calculate the count of callouts for each month
+        const monthsLabels = [
+          "Jan",
+          "Feb",
+          "Mar",
+          "Apr",
+          "May",
+          "Jun",
+          "Jul",
+          "Aug",
+          "Sep",
+          "Oct",
+          "Nov",
+          "Dec",
+        ];
+        const calloutsPerMonth = Array.from({ length: 12 }, (_, index) => {
+          const month = index + 1;
+          return {
+            month: monthsLabels[index],
+            count: data.filter(
+              (callout: any) =>
+                new Date(callout.date_start).getFullYear() === currentYear &&
+                new Date(callout.date_start).getMonth() + 1 === month
+            ).length,
+          };
+        });
+
+        // Sort the data based on the 'date_start' field from the related 'callout' table
+        const sortedData = data.sort((a: any, b: any) => {
+          const dateA: any = new Date(a.callout?.date_start || "");
+          const dateB: any = new Date(b.callout?.date_start || "");
+          return dateB - dateA;
+        });
+
+        returnData = {
+          data: sortedData,
+          countThisMonth: countThisMonth,
+          countThisYear: countThisYear,
+          countToday: countToday,
+          calloutsPerMonth: calloutsPerMonth,
+        };
+
+        setDepartmentCallouts(returnData);
+      }
+      if (error) {
+        console.log("Error fetching department callouts: " + error.message);
+      }
+    }
+
     fetchUserCount();
+    fetchStationCount();
+    activeDepartment ? fetchDepartmentCallouts(activeDepartment.id) : null;
     fetchDepartmentCalloutTypes();
   }, [activeDepartment]);
 
@@ -329,6 +442,9 @@ export default function Department() {
         <Dashboard
           department={activeDepartment}
           departmentUsers={departmentUsersCount}
+          departmentStations={departmentStationCount}
+          departmentCallouts={departmentCallouts}
+          departmentTypes={departmentTypes}
         />
       )}
       {active == "Stations" && <Stations />}
@@ -346,25 +462,33 @@ export default function Department() {
 
 function Dashboard(department: any) {
   // Variables
-  const dataPie = {
-    labels: [
-      "Helse",
-      "Brann",
-      "Trafikkulykke",
-      "Automatisk brannalarm",
-      "Dyreoppdrag",
-      "RVR",
-    ],
-    datasets: [{ data: [43, 32, 59, 23, 67, 20] }],
-  };
+  const colorPalette = ["#293241", "#3D5A80", "#688AB6", "#98C1D9"];
+  // Get all types for the dataPie
+  var dataPieArray: any = [];
+  department.departmentTypes?.forEach((type: any, index: number) => {
+    var countCallouts = 0;
 
-  const pieSettings = {
-    plugins: {
-      legend: {
-        position: "right",
+    department.departmentCallouts?.data?.forEach((callout: any) => {
+      if (type.value === callout.type) {
+        countCallouts++;
+      }
+    });
+
+    dataPieArray.push({
+      label: type.value,
+      value: countCallouts,
+      color: colorPalette[index % colorPalette.length],
+    });
+  });
+
+  const dataPie = {
+    labels: dataPieArray.map((item: any) => item.label),
+    datasets: [
+      {
+        data: dataPieArray.map((item: any) => item.value),
+        backgroundColor: dataPieArray.map((item: any) => item.color),
       },
-      title: true,
-    },
+    ],
   };
 
   const dataBar = {
@@ -373,15 +497,22 @@ function Dashboard(department: any) {
       "Feb",
       "Mar",
       "Apr",
+      "May",
       "Jun",
       "Jul",
       "Aug",
       "Sep",
-      "Okt",
+      "Oct",
       "Nov",
       "Dec",
     ],
-    datasets: [{ data: [120, 43, 32, 59, 23, 67, 20, 45, 32, 56, 89, 93] }],
+    datasets: [
+      {
+        data: department?.departmentCallouts?.calloutsPerMonth?.map(
+          (monthData: any) => monthData.count
+        ),
+      },
+    ],
   };
 
   const barSettings = {
@@ -397,30 +528,18 @@ function Dashboard(department: any) {
       <div className="flex flex-col 2xl:w-1/2">
         <div className="grid grid-cols-1 xl:grid-rows-2 xl:gap-10 gap-2 md:grid-cols-2 mt-2 xl:mt-5">
           <FeaturedCard
-            title="Callouts"
-            icon={<BarChart />}
+            title="Stations"
+            icon={<Navigation />}
             className={"rounded-[20px] bg-primary w-full"}
           >
             <div className="flex flex-col px-6 w-full">
               <div className="flex flex-row">
-                <div className="text-5xl">189</div>
-                <div className="ml-5">This month</div>
-              </div>
-              <div className="flex justify-evenly py-4">
-                <div className="text-center mx-4">
-                  <div className="text-xl font-bold">24</div>
-                  <div className="text-sm">Today</div>
+                <div className="text-5xl">
+                  {department.departmentStations
+                    ? department.departmentStations
+                    : 0}
                 </div>
-                <div className="border-r border-dotted" />
-                <div className="text-center mx-4">
-                  <div className="text-xl font-bold">2365</div>
-                  <div className="text-sm">This year</div>
-                </div>
-                <div className="border-r border-dotted" />
-                <div className="text-center mx-4">
-                  <div className="text-xl font-bold">14065</div>
-                  <div className="text-sm">All time</div>
-                </div>
+                <div className="ml-5">Registered stations</div>
               </div>
             </div>
           </FeaturedCard>
@@ -439,60 +558,49 @@ function Dashboard(department: any) {
             </div>
           </FeaturedCard>
           <FeaturedCard
-            title="Stations"
-            icon={<Navigation />}
-            className={"rounded-[20px] bg-primary w-full"}
+            title="Callouts"
+            icon={<BarChart />}
+            className={"rounded-[20px] bg-primary w-full col-span-2"}
           >
             <div className="flex flex-col px-6 w-full">
               <div className="flex flex-row">
-                <div className="text-5xl">8</div>
-                <div className="ml-5">Stations</div>
+                <div className="text-5xl">
+                  {department.departmentCallouts?.data.length}
+                </div>
+                <div className="ml-5">All time</div>
               </div>
               <div className="flex justify-evenly py-4">
                 <div className="text-center mx-4">
-                  <div className="text-xl font-bold">5</div>
-                  <div className="text-sm">Full time</div>
+                  <div className="text-xl font-bold">
+                    {department.departmentCallouts?.countToday}
+                  </div>
+                  <div className="text-sm">Today</div>
                 </div>
                 <div className="border-r border-dotted" />
                 <div className="text-center mx-4">
-                  <div className="text-xl font-bold">3</div>
-                  <div className="text-sm">Part time</div>
+                  <div className="text-xl font-bold">
+                    {department.departmentCallouts?.countThisMonth}
+                  </div>
+                  <div className="text-sm">This month</div>
+                </div>
+                <div className="border-r border-dotted" />
+                <div className="text-center mx-4">
+                  <div className="text-xl font-bold">
+                    {department.departmentCallouts?.countThisYear}
+                  </div>
+                  <div className="text-sm">This year</div>
                 </div>
               </div>
             </div>
-          </FeaturedCard>
-          <FeaturedCard
-            title="Vehicles"
-            icon={<Truck />}
-            className={"rounded-[20px] bg-primary w-full"}
-          >
-            <div className="flex flex-col px-6 w-full">
-              <div className="flex flex-row">
-                <div className="text-5xl">60</div>
-                <div className="ml-5">Vehicles</div>
-              </div>
-              <div className="flex justify-evenly py-4">
-                <div className="text-center mx-4">
-                  <div className="text-xl font-bold">59</div>
-                  <div className="text-sm">Operational vehicles</div>
-                </div>
-                <div className="border-r border-dotted" />
-                <div className="text-center mx-4">
-                  <div className="text-xl font-bold">20</div>
-                  <div className="text-sm">Emergency vehicles</div>
-                </div>
-                <div className="border-r border-dotted" />
-                <div className="text-center mx-4">
-                  <div className="text-xl font-bold">30</div>
-                  <div className="text-sm">Service vehicles</div>
-                </div>
-              </div>
-            </div>
-            <div className="flex flex-col px-6 w-full"></div>
           </FeaturedCard>
         </div>
         <div className="mt-10">
-          <TableCallout title={"Recent callouts"} />
+          {department.departmentCallouts?.data && (
+            <TableCallout
+              title={"Recent callouts"}
+              data={department.departmentCallouts.data}
+            />
+          )}
         </div>
       </div>
       <div className="flex flex-col w-1/2 hidden xl:block">
@@ -504,6 +612,15 @@ function Dashboard(department: any) {
                 <Pie data={dataPie} />
                 Number of callouts each month
                 <Bar data={dataBar} options={barSettings} />
+                <div className="h-[300px] md:h-[600px] xl:h-[600px]">
+                  <MapCallouts
+                    center={
+                      department.department ? department.department : null
+                    }
+                    heatmap={true}
+                    heatmapLocations={department?.departmentCallouts?.data}
+                  />
+                </div>
               </div>
             </BasicCard>
           </div>
