@@ -157,7 +157,9 @@ export default function Station() {
         <div className="flex flex-row gap-2 justify-center">
           <BasicButton
             state="default"
-            className={active === "Create" ? "bg-indigo-600" : "bg-indigo-400"}
+            className={
+              active === "Create" ? "bg-dark brightness-150" : "bg-dark"
+            }
             onClick={() => setActive("Create")}
           >
             <div className="">
@@ -168,7 +170,7 @@ export default function Station() {
           </BasicButton>
           <BasicButton
             state="default"
-            className={active === "Join" ? "bg-indigo-600" : "bg-indigo-400"}
+            className={active === "Join" ? "bg-dark brightness-150" : "bg-dark"}
             onClick={() => setActive("Join")}
           >
             <div className="">
@@ -239,7 +241,9 @@ export default function Station() {
       <div className="flex flex-row gap-2 mt-5 text-xs">
         <BasicButton
           state="default"
-          className={active === "Dashboard" ? "bg-indigo-600" : "bg-indigo-400"}
+          className={
+            active === "Dashboard" ? "bg-dark brightness-150" : "bg-dark"
+          }
           onClick={() => setActive("Dashboard")}
         >
           <div className="">
@@ -251,7 +255,9 @@ export default function Station() {
         </BasicButton>
         <BasicButton
           state="default"
-          className={active === "Callouts" ? "bg-indigo-600" : "bg-indigo-400"}
+          className={
+            active === "Callouts" ? "bg-dark brightness-150" : "bg-dark"
+          }
           onClick={() => setActive("Callouts")}
         >
           <div className="">
@@ -263,7 +269,9 @@ export default function Station() {
         </BasicButton>
         <BasicButton
           state="default"
-          className={active === "Vehicles" ? "bg-indigo-600" : "bg-indigo-400"}
+          className={
+            active === "Vehicles" ? "bg-dark brightness-150" : "bg-dark"
+          }
           onClick={() => setActive("Vehicles")}
         >
           <div className="">
@@ -275,7 +283,9 @@ export default function Station() {
         </BasicButton>
         <BasicButton
           state="default"
-          className={active === "Settings" ? "bg-indigo-600" : "bg-indigo-400"}
+          className={
+            active === "Settings" ? "bg-dark brightness-150" : "bg-dark"
+          }
           onClick={() => setActive("Settings")}
         >
           <div className="">
@@ -287,7 +297,7 @@ export default function Station() {
         </BasicButton>
         <BasicButton
           state="default"
-          className={active === "Create" ? "bg-indigo-600" : "bg-indigo-400"}
+          className={active === "Create" ? "bg-dark brightness-150" : "bg-dark"}
           onClick={() => setActive("Create")}
         >
           <div className="">
@@ -299,7 +309,7 @@ export default function Station() {
         </BasicButton>
         <BasicButton
           state="default"
-          className={active === "Join" ? "bg-indigo-600" : "bg-indigo-400"}
+          className={active === "Join" ? "bg-dark brightness-150" : "bg-dark"}
           onClick={() => setActive("Join")}
         >
           <div className="">
@@ -378,9 +388,7 @@ function Dashboard(data: any) {
           <FeaturedCard
             title="Callouts"
             icon={<BarChart />}
-            className={
-              "rounded-[20px] bg-gradient-to-r from-gray-500 to-gray-700 w-full"
-            }
+            className={"rounded-[20px] bg-primary w-full"}
           >
             <div className="flex flex-col px-6 w-full">
               <div className="flex flex-row">
@@ -408,9 +416,7 @@ function Dashboard(data: any) {
           <FeaturedCard
             title="Users"
             icon={<Users />}
-            className={
-              "rounded-[20px] bg-gradient-to-r from-gray-500 to-gray-700 w-full"
-            }
+            className={"rounded-[20px] bg-primary w-full"}
           >
             <div className="flex flex-col px-6 w-full">
               <div className="flex flex-row">
@@ -424,9 +430,7 @@ function Dashboard(data: any) {
           <FeaturedCard
             title="Stations"
             icon={<Navigation />}
-            className={
-              "rounded-[20px] bg-gradient-to-r from-gray-500 to-gray-700 w-full"
-            }
+            className={"rounded-[20px] bg-primary w-full"}
           >
             <div className="flex flex-col px-6 w-full">
               <div className="flex flex-row">
@@ -449,9 +453,7 @@ function Dashboard(data: any) {
           <FeaturedCard
             title="Vehicles"
             icon={<Truck />}
-            className={
-              "rounded-[20px] bg-gradient-to-r from-gray-500 to-gray-700 w-full"
-            }
+            className={"rounded-[20px] bg-primary w-full"}
           >
             <div className="flex flex-col px-6 w-full">
               <div className="flex flex-row">

@@ -166,9 +166,7 @@ function Dashboard(data: any) {
         <FeaturedCard
           title="Date"
           icon={<Calendar />}
-          className={
-            "rounded-[20px] bg-gradient-to-r from-gray-500 to-gray-700 w-full"
-          }
+          className={"rounded-[20px] bg-primary w-full"}
         >
           <div className="flex flex-col px-6">
             <div className="flex flex-row">
@@ -183,9 +181,7 @@ function Dashboard(data: any) {
         <FeaturedCard
           title="Address"
           icon={<Map />}
-          className={
-            "rounded-[20px] bg-gradient-to-r from-gray-500 to-gray-700 w-full"
-          }
+          className={"rounded-[20px] bg-primary w-full"}
         >
           <div className="flex flex-col px-6">
             <div className="flex flex-row">
@@ -196,9 +192,7 @@ function Dashboard(data: any) {
         <FeaturedCard
           title="Department"
           icon={<Box />}
-          className={
-            "rounded-[20px] bg-gradient-to-r from-gray-500 to-gray-700 w-full"
-          }
+          className={"rounded-[20px] bg-primary w-full"}
         >
           <div className="flex flex-col px-6">
             <div className="flex flex-row">
@@ -209,9 +203,7 @@ function Dashboard(data: any) {
         <FeaturedCard
           title="Station"
           icon={<Navigation />}
-          className={
-            "rounded-[20px] bg-gradient-to-r from-gray-500 to-gray-700 w-full"
-          }
+          className={"rounded-[20px] bg-primary w-full"}
         >
           <div className="flex flex-col px-6">
             <div className="flex flex-row">

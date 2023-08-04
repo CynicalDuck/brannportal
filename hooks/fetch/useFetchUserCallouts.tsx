@@ -18,7 +18,7 @@ export function useFetchUserCallouts() {
       // Fetch all callouts for the user
       const { data, error } = await supabase
         .from("user_connection_callout")
-        .select(`*, callout (*)`)
+        .select(`*, callout(*, department (*), station (*))`)
         .eq("user", session?.user.id);
 
       if (data) {

@@ -1,13 +1,14 @@
 "use client";
 
 // Import required
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import {
   useLoadScript,
   GoogleMap,
   MarkerF,
   HeatmapLayer,
   useGoogleMap,
+  InfoWindowF,
 } from "@react-google-maps/api";
 
 // Import icons
@@ -35,6 +36,8 @@ interface Props {
   single?: true | false;
   heatmap?: true | false;
   heatmapLocations?: any;
+  markers?: true | false;
+  markerData?: any;
 }
 
 export default function MapCallouts({
@@ -44,6 +47,8 @@ export default function MapCallouts({
   single,
   heatmap,
   heatmapLocations,
+  markers,
+  markerData,
   ...props
 }: Props) {
   // States
@@ -59,6 +64,10 @@ export default function MapCallouts({
   );
   const [mapCenter, setMapCenter] = useState<any>();
   const [heatmapData, setHeatmapData] = useState<any>(null);
+  const [isInfoWindowOpen, setIsInfoWindowOpen] = useState<boolean>(false);
+
+  const markerRef = useRef<google.maps.Marker | null>(null);
+  const [selectedMarker, setSelectedMarker] = useState<any>(null);
 
   // Auth
   const { session } = useSession();
@@ -81,7 +90,32 @@ export default function MapCallouts({
     libraries: libraries as any,
   });
 
+  const formatDateAndTime = (dateTimeString: any) => {
+    const dateTime = new Date(dateTimeString);
+    const day = String(dateTime.getMonth() + 1).padStart(2, "0");
+    const month = String(dateTime.getDate()).padStart(2, "0");
+    const year = String(dateTime.getFullYear()).slice(2);
+    const hours = String(dateTime.getHours()).padStart(2, "0");
+    const minutes = String(dateTime.getMinutes()).padStart(2, "0");
+
+    return `${month}.${day}.${year} - ${hours}:${minutes}`;
+  };
+
+  // Handlers
+  // Handle the click event on the MarkerF
+  const handleMarkerClick = (marker: any) => {
+    setSelectedMarker(marker);
+  };
+
   // Use effects
+  useEffect(() => {
+    if (markerData) {
+      // This will point to the last marker in markerData
+      // If you want to handle multiple markers, you'll need to find a way to reference them individually
+      markerRef.current = markerData[markerData.length - 1];
+    }
+  }, [markerData]);
+
   useEffect(() => {
     if (center) {
       setMapCenter({
@@ -125,12 +159,63 @@ export default function MapCallouts({
           heatmapData ? (
             <div>
               <HeatmapLayer data={heatmapData} />
-              {heatmapData.map((location: any, i: number) => (
-                <MarkerF position={location} />
-              ))}
             </div>
           ) : null
         ) : null}
+        {markers
+          ? markerData?.map((data: any, i: number) => {
+              return (
+                <React.Fragment key={i}>
+                  <MarkerF
+                    title="Test"
+                    position={
+                      new google.maps.LatLng(
+                        parseFloat(data.callout.latitude),
+                        parseFloat(data.callout.longitude)
+                      )
+                    }
+                    onClick={() => handleMarkerClick(data)}
+                  />
+                  {selectedMarker === data ? (
+                    <InfoWindowF
+                      position={
+                        new google.maps.LatLng(
+                          parseFloat(data.callout.latitude),
+                          parseFloat(data.callout.longitude)
+                        )
+                      }
+                      onCloseClick={() => setSelectedMarker(null)} // Close the info window when clicked on close button
+                    >
+                      <div className="flex flex-col gap-2 text-xs">
+                        <div className="flex flex-row gap-2">
+                          <div className="">
+                            {"[" +
+                              selectedMarker.callout.station.code_full +
+                              "]"}
+                          </div>
+                          <div>
+                            {formatDateAndTime(
+                              selectedMarker.callout.date_start +
+                                " " +
+                                selectedMarker.callout.time_start
+                            )}
+                          </div>
+                          <div className="font-semibold">
+                            {selectedMarker.callout.type}
+                          </div>
+                        </div>
+                        <div>
+                          {selectedMarker.callout.description
+                            ? selectedMarker.callout.description
+                            : null}
+                        </div>
+                      </div>
+                    </InfoWindowF>
+                  ) : null}
+                </React.Fragment>
+              );
+            })
+          : null}
         {single ? <MarkerF position={mapCenter} /> : null}
       </GoogleMap>
     </div>

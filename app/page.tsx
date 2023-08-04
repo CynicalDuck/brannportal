@@ -162,7 +162,7 @@ export default function Home() {
           <BasicButton
             state="default"
             className={
-              active === "Dashboard" ? "bg-indigo-600" : "bg-indigo-400"
+              active === "Dashboard" ? "bg-dark brightness-150" : "bg-dark"
             }
             onClick={() => setActive("Dashboard")}
           >
@@ -181,9 +181,7 @@ export default function Home() {
               <FeaturedCard
                 title="Callouts"
                 icon={<BarChart />}
-                className={
-                  "rounded-[20px] bg-gradient-to-r from-gray-500 to-gray-700 w-full"
-                }
+                className={"rounded-[20px] bg-primary w-full"}
               >
                 <div className="flex flex-col px-6">
                   <div className="flex flex-row">
@@ -219,9 +217,7 @@ export default function Home() {
               <FeaturedCard
                 title="Smoke exposure"
                 icon={<Users />}
-                className={
-                  "rounded-[20px] bg-gradient-to-r from-gray-500 to-gray-700 w-full"
-                }
+                className={"rounded-[20px] bg-primary w-full"}
               >
                 <div className="flex flex-col px-6">
                   <div className="flex flex-row">
@@ -267,9 +263,7 @@ export default function Home() {
               <FeaturedCard
                 title="Stations"
                 icon={<Navigation />}
-                className={
-                  "rounded-[20px] bg-gradient-to-r from-gray-500 to-gray-700 w-full"
-                }
+                className={"rounded-[20px] bg-primary w-full"}
               >
                 <div className="flex flex-col px-6">
                   <div className="flex flex-row">
@@ -284,8 +278,8 @@ export default function Home() {
             <div className="h-[300px] md:h-[600px] xl:h-full">
               <MapCallouts
                 center={stations ? stations[0]?.station : null}
-                heatmap
-                heatmapLocations={dataCallouts?.data}
+                markers={true}
+                markerData={dataCallouts?.data}
               />
             </div>
             <TableCallout data={dataCallouts?.data} />
