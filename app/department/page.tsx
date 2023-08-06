@@ -81,7 +81,7 @@ export default function Department() {
   const [allDepartments, setAllDepartments] = useState<any>();
   const [isDepartmentDropdownOpen, setIsDepartmentDropdownOpen] =
     useState(false);
-  const [departmentUsersCount, setDepartmentUsersCount] = useState<number>();
+  const [departmentUsers, setDepartmentUsers] = useState<any>();
   const [departmentCallouts, setDepartmentCallouts] = useState<any>();
   const [departmentTypes, setDepartmentTypes] = useState<any>();
   const [departmentTypeGroups, setDepartmentTypeGroups] = useState<any>();
@@ -94,11 +94,7 @@ export default function Department() {
     if (session) {
       const { data, error } = await supabase
         .from("user_connection_department")
-        .select(
-          `*,
-          department (*)
-    `
-        )
+        .select(`*, department(*, created_by)`)
         .eq("user", session?.user.id);
 
       if (error) {
@@ -106,7 +102,7 @@ export default function Department() {
           "There was an error when fetching your departments: " + error.message
         );
       } else {
-        setActiveDepartment(data[0].department || null);
+        setActiveDepartment(data[0]?.department || null);
 
         // Create a list of all departments
         let allDepartments: any = [];
@@ -125,6 +121,13 @@ export default function Department() {
     setIsDepartmentDropdownOpen(false);
   };
 
+  // Function to check if two timestamps are within 5 minutes of each other
+  function areTimestampsWithin5Minutes(timestamp1: any, timestamp2: any) {
+    const diff = Math.abs(timestamp1 - timestamp2);
+    const fiveMinutesInMilliseconds = 5 * 60 * 1000; // 5 minutes in milliseconds
+    return diff <= fiveMinutesInMilliseconds;
+  }
+
   // Variables
 
   // Use effects
@@ -137,20 +140,18 @@ export default function Department() {
   }, [session]);
 
   useEffect(() => {
-    // Fetch the user count when the active department changes
-    async function fetchUserCount() {
+    // Fetch the users when the active department changes
+    async function fetchUsers() {
       if (activeDepartment) {
-        const { count, error } = await supabase
+        const { data, error } = await supabase
           .from("user_connection_department")
-          .select("count", { count: "exact" })
+          .select("*")
           .eq("department", activeDepartment.id);
 
         if (error) {
-          alert(
-            "There was an error when fetching the user count: " + error.message
-          );
+          alert("There was an error when fetching the users: " + error.message);
         } else {
-          setDepartmentUsersCount(count ? count : 0);
+          setDepartmentUsers(data);
         }
       }
     }
@@ -222,26 +223,55 @@ export default function Department() {
       if (data) {
         var returnData = {};
 
+        // Filter out duplicates based on callout_id and timestamp conditions
+        const uniqueCallouts: any = [];
+        data.forEach((callout) => {
+          const isDuplicate =
+            (callout.callout_id !== null &&
+              callout.callout_id !== "" &&
+              uniqueCallouts.some(
+                (uniqueCallout: any) =>
+                  callout.callout_id === uniqueCallout.callout_id &&
+                  callout.station.id === uniqueCallout.station.id
+              )) ||
+            uniqueCallouts.some(
+              (uniqueCallout: any) =>
+                callout.station.id === uniqueCallout.station.id &&
+                areTimestampsWithin5Minutes(
+                  new Date(
+                    callout.date_start + " " + callout.time_start
+                  ).getTime(),
+                  new Date(
+                    uniqueCallout.date_start + " " + uniqueCallout.time_start
+                  ).getTime()
+                )
+            );
+
+          if (!isDuplicate) {
+            uniqueCallouts.push(callout);
+          }
+        });
+
         // Calculate the count of callouts with date_start within the current month
         const currentDate = new Date();
         const currentYear = currentDate.getFullYear();
         const currentMonth = currentDate.getMonth() + 1; // January is 0, so we add 1 to get the correct month number
 
-        const countThisMonth = data.filter(
+        const countThisMonth = uniqueCallouts.filter(
           (callout: any) =>
             new Date(callout.date_start).getFullYear() === currentYear &&
             new Date(callout.date_start).getMonth() + 1 === currentMonth
         ).length;
 
         // Calculate the count of callouts with date_start within the current year
-        const countThisYear = data.filter(
+        const countThisYear = uniqueCallouts.filter(
           (callout: any) =>
             new Date(callout.date_start).getFullYear() === currentYear
         ).length;
 
         // Calculate the count of callouts with date_start within the current day
         const currentDay = currentDate.getDate(); // Get the day of the current date
-        const countToday = data.filter(
+        const countToday = uniqueCallouts.filter(
           (callout: any) =>
             new Date(callout.date_start).getFullYear() === currentYear &&
             new Date(callout.date_start).getMonth() + 1 === currentMonth &&
@@ -276,7 +306,7 @@ export default function Department() {
         });
 
         // Sort the data based on the 'date_start' field from the related 'callout' table
-        const sortedData = data.sort((a: any, b: any) => {
+        const sortedData = uniqueCallouts.sort((a: any, b: any) => {
           const dateA: any = new Date(a.callout?.date_start || "");
           const dateB: any = new Date(b.callout?.date_start || "");
           return dateB - dateA;
@@ -297,7 +327,7 @@ export default function Department() {
       }
     }
 
-    fetchUserCount();
+    fetchUsers();
     fetchStationCount();
     activeDepartment ? fetchDepartmentCallouts(activeDepartment.id) : null;
     fetchDepartmentCalloutTypes();
@@ -308,6 +338,45 @@ export default function Department() {
 
   if (!session) {
     return <Progress />;
+  }
+
+  if (!activeDepartment) {
+    return (
+      <div className="flex flex-col gap-4">
+        <div>
+          You have no departments connected to your user, you can do the
+          following actions:
+        </div>
+        <div className="flex flex-row gap-2 justify-center">
+          <BasicButton
+            state="default"
+            className={
+              active === "Create" ? "bg-dark brightness-150" : "bg-dark"
+            }
+            onClick={() => setActive("Create")}
+          >
+            <div className="">
+              <div className="flex flex-row gap-2">
+                <div className="hidden md:block">Create new</div>
+              </div>
+            </div>
+          </BasicButton>
+          <BasicButton
+            state="default"
+            className={active === "Join" ? "bg-dark brightness-150" : "bg-dark"}
+            onClick={() => setActive("Join")}
+          >
+            <div className="">
+              <div className="flex flex-row gap-2">
+                <div className="hidden md:block">Join existing</div>
+              </div>
+            </div>
+          </BasicButton>
+        </div>
+        {active == "Create" && <CreateNew />}
+        {active == "Join" && <JoinExisting />}
+      </div>
+    );
   }
 
   return (
@@ -380,62 +449,26 @@ export default function Department() {
             </div>
           </div>
         </BasicButton>
-        <BasicButton
-          state="default"
-          className={
-            active === "Callouts" ? "bg-dark brightness-150" : "bg-dark"
-          }
-          onClick={() => setActive("Callouts")}
-        >
-          <div className="">
-            <div className="flex flex-row gap-2">
-              <BarChart size={14} />
-              <div className="hidden md:block">Callouts</div>
+        {departmentUsers?.some(
+          (user: any) =>
+            user.user === session.user.id &&
+            (user.role_level === 2 || user.role_level === 3)
+        ) && (
+          <BasicButton
+            state="default"
+            className={
+              active === "Settings" ? "bg-dark brightness-150" : "bg-dark"
+            }
+            onClick={() => setActive("Settings")}
+          >
+            <div className="">
+              <div className="flex flex-row gap-2">
+                <SettingsIcon size={14} />
+                <div className="hidden md:block">Settings</div>
+              </div>
             </div>
-          </div>
-        </BasicButton>
-        <BasicButton
-          state="default"
-          className={
-            active === "Stations" ? "bg-dark brightness-150" : "bg-dark"
-          }
-          onClick={() => setActive("Stations")}
-        >
-          <div className="">
-            <div className="flex flex-row gap-2">
-              <Navigation size={14} />
-              <div className="hidden md:block">Stations</div>
-            </div>
-          </div>
-        </BasicButton>
-        <BasicButton
-          state="default"
-          className={
-            active === "Vehicles" ? "bg-dark brightness-150" : "bg-dark"
-          }
-          onClick={() => setActive("Vehicles")}
-        >
-          <div className="">
-            <div className="flex flex-row gap-2">
-              <Truck size={14} />
-              <div className="hidden md:block">Vehicles</div>
-            </div>
-          </div>
-        </BasicButton>
-        <BasicButton
-          state="default"
-          className={
-            active === "Settings" ? "bg-dark brightness-150" : "bg-dark"
-          }
-          onClick={() => setActive("Settings")}
-        >
-          <div className="">
-            <div className="flex flex-row gap-2">
-              <SettingsIcon size={14} />
-              <div className="hidden md:block">Settings</div>
-            </div>
-          </div>
-        </BasicButton>
+          </BasicButton>
+        )}
         <BasicButton
           state="default"
           className={active === "Create" ? "bg-dark brightness-150" : "bg-dark"}
@@ -462,26 +495,26 @@ export default function Department() {
         </BasicButton>
       </div>
       <Separator className="my-4" />
-      {active == "Callouts" && <Callouts />}
       {active == "Dashboard" && (
         <Dashboard
           department={activeDepartment}
-          departmentUsers={departmentUsersCount}
+          departmentUsers={departmentUsers}
           departmentStations={departmentStationCount}
           departmentCallouts={departmentCallouts}
           departmentTypes={departmentTypes}
+          departmentTypeGroups={departmentTypeGroups}
         />
       )}
-      {active == "Stations" && <Stations />}
-      {active == "Vehicles" && <Vehicles />}
       {active == "Settings" && (
         <Settings
           department={activeDepartment}
           departmentTypes={departmentTypes}
           departmentTypeGroups={departmentTypeGroups}
+          departmentUsers={departmentUsers}
         />
       )}
       {active == "Create" && <CreateNew />}
+      {active == "Join" && <JoinExisting />}
     </div>
   );
 }
@@ -491,17 +524,20 @@ function Dashboard(department: any) {
   const colorPalette = ["#293241", "#3D5A80", "#688AB6", "#98C1D9"];
   // Get all types for the dataPie
   var dataPieArray: any = [];
-  department.departmentTypes?.forEach((type: any, index: number) => {
+
+  department.departmentTypeGroups?.forEach((group: any, index: number) => {
     var countCallouts = 0;
 
     department.departmentCallouts?.data?.forEach((callout: any) => {
-      if (type.value === callout.type) {
-        countCallouts++;
-      }
+      department.departmentTypes?.forEach((type: any) => {
+        if (type.group === group.id && type.value === callout.type) {
+          countCallouts++;
+        }
+      });
     });
 
     dataPieArray.push({
-      label: type.value,
+      label: group.value + " (" + countCallouts + ")",
       value: countCallouts,
       color: colorPalette[index % colorPalette.length],
     });
@@ -577,7 +613,9 @@ function Dashboard(department: any) {
             <div className="flex flex-col px-6 w-full">
               <div className="flex flex-row">
                 <div className="text-5xl">
-                  {department.departmentUsers ? department.departmentUsers : 0}
+                  {department.departmentUsers
+                    ? department.departmentUsers.length
+                    : 0}
                 </div>
                 <div className="ml-5">Registered users</div>
               </div>
@@ -586,7 +624,9 @@ function Dashboard(department: any) {
           <FeaturedCard
             title="Callouts"
             icon={<BarChart />}
-            className={"rounded-[20px] bg-primary w-full col-span-2"}
+            className={
+              "rounded-[20px] bg-primary w-full col-span-1 md:col-span-2"
+            }
           >
             <div className="flex flex-col px-6 w-full">
               <div className="flex flex-row">
@@ -620,14 +660,14 @@ function Dashboard(department: any) {
             </div>
           </FeaturedCard>
         </div>
-        <div className="mt-10">
+        {/* <div className="mt-10">
           {department.departmentCallouts?.data && (
             <TableCallout
-              title={"Recent callouts"}
-              data={department.departmentCallouts.data}
+            title={"Recent callouts"}
+            data={department.departmentCallouts.data}
             />
           )}
-        </div>
+        </div> */}
       </div>
       <div className="flex flex-col w-1/2 hidden xl:block">
         <div className="grid grid-cols-1 grid-rows-2 gap-10 lg:grid-cols-2 mt-5">
@@ -656,36 +696,101 @@ function Dashboard(department: any) {
   );
 }
 
-function Callouts() {
-  return (
-    <div className="w-full flex justify-center justify-items-center">
-      <TableCallout title={"Department callouts"} />
-    </div>
-  );
-}
-
-function Stations() {
-  return (
-    <div className="w-full flex justify-center justify-items-center">
-      <TableStation />
-    </div>
-  );
-}
-
-function Vehicles() {
-  return (
-    <div className="w-full flex justify-center justify-items-center">
-      <TableVehicle />
-    </div>
-  );
-}
-
 function Settings(data: any) {
   // States
   const [newCalloutTypeName, setNewCalloutTypeName] = useState("");
   const [newCalloutGroupName, setNewCalloutGroupName] = useState("");
   const [calloutTypes, setCalloutTypes] = useState(data.departmentTypes);
   const [calloutGroups, setCalloutGroups] = useState(data.departmentTypeGroups);
+  const [showMessageName, setShowMessageName] = useState(false);
+  const [messageName, setMessageName] = useState("");
+  const [showMessageAbbr, setShowMessageAbbr] = useState(false);
+  const [messageAbbr, setMessageAbbr] = useState("");
+
+  // Function to change the name of the department
+  async function handleNameChange(value: string) {
+    if (value.length > 0) {
+      const { data: dataCheckName, error: errorCheckName } = await supabase
+        .from("departments")
+        .select()
+        .ilike("name", value);
+
+      if (errorCheckName) {
+        setShowMessageName(true);
+        setMessageName(
+          "An error occurred while checking the name: " + errorCheckName.message
+        );
+      } else {
+        if (dataCheckName && dataCheckName.length !== 0) {
+          setShowMessageName(true);
+          setMessageName("This name already exists...");
+        } else {
+          const { data: dataNewName, error } = await supabase
+            .from("departments")
+            .update({
+              name: value,
+            })
+            .eq("id", data.department.id);
+
+          if (error) {
+            setShowMessageName(true);
+            setMessageName("An error occurred: " + error.message);
+          } else {
+            setShowMessageName(true);
+            setMessageName(
+              "Changes are saved, you might need to refresh to see the effect"
+            );
+          }
+        }
+      }
+    } else {
+      setShowMessageName(true);
+      setMessageName("The name needs at least one char");
+    }
+  }
+
+  // Function to change the abbreviation of the department
+  async function handleAbbrChange(value: string) {
+    if (value.length > 0) {
+      const { data: dataCheckAbbr, error: errorCheckAbbr } = await supabase
+        .from("departments")
+        .select()
+        .ilike("abbreviation", value);
+
+      if (errorCheckAbbr) {
+        setShowMessageAbbr(true);
+        setMessageAbbr(
+          "An error occurred while checking the abbreviation: " +
+            errorCheckAbbr.message
+        );
+      } else {
+        if (dataCheckAbbr && dataCheckAbbr.length !== 0) {
+          setShowMessageAbbr(true);
+          setMessageAbbr("This abbreviation already exists...");
+        } else {
+          const { data: dataNewAbbr, error } = await supabase
+            .from("departments")
+            .update({
+              abbreviation: value,
+            })
+            .eq("id", data.department.id);
+
+          if (error) {
+            setShowMessageAbbr(true);
+            setMessageAbbr("An error occurred: " + error.message);
+          } else {
+            setShowMessageAbbr(true);
+            setMessageAbbr(
+              "Changes are saved, you might need to refresh to see the effect"
+            );
+          }
+        }
+      }
+    } else {
+      setShowMessageName(true);
+      setMessageName("The name needs at least one char");
+    }
+  }
 
   // Function to handle adding a new callout type
   async function handleAddNewCalloutType() {
@@ -840,21 +945,57 @@ function Settings(data: any) {
           <input
             type="text"
             className="rounded-[10px] border-accent3 text-dark w-full px-2"
-            placeholder="Nedre Romerike brann- og redningsvesen IKS"
+            defaultValue={data.department?.name ? data.department.name : "-"}
+            onChange={(e) => handleNameChange(e.target.value)}
           />
+          {showMessageName && <div className="text-xs">{messageName}</div>}
         </div>
         <div className="grid grid-cols-2">
-          <div className="">Abbrivation:</div>
+          <div className="">Abbreviation:</div>
           <input
             type="text"
             className="rounded-[10px] border-accent3 text-dark w-full px-2"
-            placeholder="NRBR"
+            defaultValue={data.department.abbreviation}
+            onChange={(e) => handleAbbrChange(e.target.value)}
           />
+          {showMessageAbbr && <div className="text-xs">{messageAbbr}</div>}
+        </div>
+        <div className="grid grid-cols-2">
+          <div className="">Invitation code:</div>
+          <div className="flex flex-col">
+            <div className="text-sm">{data.department?.invite_code}</div>
+          </div>
+        </div>
+        <div className="grid grid-cols-2">
+          <div className="">Created by:</div>
+          <div className="flex flex-col">
+            <div className="text-sm">
+              {data.departmentUsers?.length > 0 ? (
+                data.departmentUsers.map((user: any) => {
+                  return user.role_level === 3 ? (
+                    <div>{user.user_name}</div>
+                  ) : null;
+                })
+              ) : (
+                <div>No users available.</div>
+              )}
+            </div>
+          </div>
         </div>
         <div className="grid grid-cols-2">
           <div className="">Administrators:</div>
           <div className="flex flex-col">
-            <div className="text-sm">Marius Bekk</div>
+            <div className="text-sm">
+              {data.departmentUsers?.length > 0 ? (
+                data.departmentUsers.map((user: any) => {
+                  return user.role_level === 2 ? (
+                    <div>{user.user_name}</div>
+                  ) : null;
+                })
+              ) : (
+                <div>No users available.</div>
+              )}
+            </div>
           </div>
         </div>
         <div className="grid grid-cols-2">
@@ -866,13 +1007,21 @@ function Settings(data: any) {
             <SelectContent>
               <SelectGroup>
                 <SelectLabel>Department users</SelectLabel>
-                <SelectItem value="1" disabled>
-                  Marius Bekk
-                </SelectItem>
-                <SelectItem value="2">Christopher Johansen</SelectItem>
-                <SelectItem value="3">Ole Martin Langseth</SelectItem>
-                <SelectItem value="4">Mads Langseth</SelectItem>
-                <SelectItem value="5">Mats Gulbrandsen</SelectItem>
+                {data.departmentUsers?.length > 0 ? (
+                  data.departmentUsers.map((user: any) => {
+                    return user.role_level === 2 || user.role_level === 3 ? (
+                      <SelectItem value={user.user} disabled>
+                        {user.user_name}
+                      </SelectItem>
+                    ) : user.role_level === 0 || user.role_level === 1 ? (
+                      <SelectItem value={user.user}>
+                        {user.user_name}
+                      </SelectItem>
+                    ) : null;
+                  })
+                ) : (
+                  <div>No users available.</div>
+                )}
               </SelectGroup>
             </SelectContent>
           </Select>
@@ -881,7 +1030,7 @@ function Settings(data: any) {
           <div className="">Callout groups:</div>
           <div className="flex flex-col">
             <div className="text-sm">
-              {calloutGroups.map((group: any) => (
+              {calloutGroups?.map((group: any) => (
                 <div
                   key={group.id}
                   className="px-2 py-1 flex flex-row items-center gap-2"
@@ -916,7 +1065,7 @@ function Settings(data: any) {
           <div className="">Callout types:</div>
           <div className="flex flex-col">
             <div className="text-sm">
-              {calloutGroups.map((group: any) => (
+              {calloutGroups?.map((group: any) => (
                 <div key={group.id} className="px-2 py-1 flex flex-col gap-1">
                   <div className="bg-white py-1 px-2 font-semibold rounded-[15px]">
                     {group.value}
@@ -963,7 +1112,7 @@ function Settings(data: any) {
                                     }
                                   >
                                     <option value={0}>---</option>
-                                    {calloutGroups.map((group: any) => (
+                                    {calloutGroups?.map((group: any) => (
                                       <option key={group.id} value={group.id}>
                                         {group.value}
                                       </option>
@@ -1029,7 +1178,7 @@ function Settings(data: any) {
                                   }
                                 >
                                   <option value={0}>---</option>
-                                  {calloutGroups.map((group: any) => (
+                                  {calloutGroups?.map((group: any) => (
                                     <option key={group.id} value={group.id}>
                                       {group.value}
                                     </option>
@@ -1128,7 +1277,7 @@ function CreateNew() {
     const { data, error } = await supabase
       .from("departments")
       .select()
-      .ilike("name", "%" + e.target.value + "%");
+      .ilike("name", e.target.value);
 
     if (data) {
       if (data.length > 0) {
@@ -1227,6 +1376,8 @@ function CreateNew() {
           .insert({
             department: data[0].id,
             user: session.user.id,
+            user_name: session.user.user_metadata.name,
+            role_level: 3,
           });
 
         if (errorConnection) {
@@ -1332,6 +1483,99 @@ function CreateNew() {
           </div>
         </div>
       </BasicCard>
+    </div>
+  );
+}
+
+function JoinExisting() {
+  const { session } = useSession();
+  const [code, setCode] = useState<string>("");
+  const [showMessage, setShowMessage] = useState(false);
+  const [message, setMessage] = useState("");
+
+  async function handleJoinExisting() {
+    if (code.length > 0) {
+      // Get the department
+      const { data: dataDepartment, error: errorDepartment } = await supabase
+        .from("departments")
+        .select()
+        .eq("invite_code", code);
+
+      if (errorDepartment) {
+        setShowMessage(true);
+        setMessage(
+          "An error occured while trying to get the department: " +
+            errorDepartment.message
+        );
+      } else {
+        if (dataDepartment.length > 0) {
+          // Check if the user is allready a part of that department
+          const {
+            data: dataDepartmentConnection,
+            error: errorDepartmentConnection,
+          } = await supabase
+            .from("user_connection_department")
+            .select()
+            .eq("department", dataDepartment[0].id)
+            .eq("user", session.user.id);
+
+          if (errorDepartmentConnection) {
+            setShowMessage(true);
+            setMessage(
+              "An error occured while trying to get the department: " +
+                errorDepartmentConnection.message
+            );
+          } else {
+            console.log(dataDepartmentConnection);
+            if (dataDepartmentConnection.length > 0) {
+              setShowMessage(true);
+              setMessage("You are allready a part of this department");
+            } else {
+              const {
+                data: dataConnectionDepartmentNew,
+                error: errorDepartmentConnectionNew,
+              } = await supabase.from("user_connection_department").insert({
+                department: dataDepartment[0].id,
+                user: session.user.id,
+                user_name: session.user.user_metadata.name,
+                role_level: 1,
+              });
+
+              if (errorDepartmentConnectionNew) {
+                setShowMessage(true);
+                setMessage(
+                  "An error occured while trying to get the department: " +
+                    errorDepartmentConnectionNew.message
+                );
+              } else {
+                window.location.reload();
+              }
+            }
+          }
+        } else {
+          setShowMessage(true);
+          setMessage("Did not find any department with that code");
+        }
+      }
+    } else {
+      setShowMessage(true);
+      setMessage("You need to input at least one char");
+    }
+  }
+
+  return (
+    <div className="flex flex-col w-full">
+      <div className="flex flex-row gap-4 w-full">
+        <input
+          className="border rounded-[15px] w-full px-2"
+          placeholder="Invite code"
+          onChange={(e) => setCode(e.target.value)}
+        />
+        <BasicButton state={"success"} onClick={() => handleJoinExisting()}>
+          Join
+        </BasicButton>
+      </div>
+      <div className="text-xs">{showMessage && message}</div>
     </div>
   );
 }
