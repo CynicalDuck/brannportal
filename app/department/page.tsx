@@ -39,6 +39,11 @@ import {
 import Progress from "@/components/Loaders/Progress";
 import AutocompleteAddress from "@/components/Maps/Autocomplete";
 import MapCallouts from "@/components/Maps/MapCallouts";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 import {
   Chart as ChartJS,
@@ -79,6 +84,7 @@ export default function Department() {
   const [departmentUsersCount, setDepartmentUsersCount] = useState<number>();
   const [departmentCallouts, setDepartmentCallouts] = useState<any>();
   const [departmentTypes, setDepartmentTypes] = useState<any>();
+  const [departmentTypeGroups, setDepartmentTypeGroups] = useState<any>();
   const [departmentStationCount, setDepartmentStationCount] =
     useState<number>();
 
@@ -185,6 +191,24 @@ export default function Department() {
       }
     }
 
+    // Fetch the callout type groups when the active department changes
+    async function fetchDepartmentCalloutTypeGroups() {
+      if (activeDepartment) {
+        const { data, error } = await supabase
+          .from("callout_type_groups")
+          .select()
+          .eq("department", activeDepartment.id);
+
+        if (error) {
+          alert(
+            "There was an error when fetching the user count: " + error.message
+          );
+        } else {
+          setDepartmentTypeGroups(data);
+        }
+      }
+    }
+
     // Fetch department callouts
     async function fetchDepartmentCallouts(id: number) {
       // Fetch all callouts for the department
@@ -277,6 +301,7 @@ export default function Department() {
     fetchStationCount();
     activeDepartment ? fetchDepartmentCallouts(activeDepartment.id) : null;
     fetchDepartmentCalloutTypes();
+    fetchDepartmentCalloutTypeGroups();
   }, [activeDepartment]);
 
   // Return
@@ -453,6 +478,7 @@ export default function Department() {
         <Settings
           department={activeDepartment}
           departmentTypes={departmentTypes}
+          departmentTypeGroups={departmentTypeGroups}
         />
       )}
       {active == "Create" && <CreateNew />}
@@ -657,7 +683,9 @@ function Vehicles() {
 function Settings(data: any) {
   // States
   const [newCalloutTypeName, setNewCalloutTypeName] = useState("");
+  const [newCalloutGroupName, setNewCalloutGroupName] = useState("");
   const [calloutTypes, setCalloutTypes] = useState(data.departmentTypes);
+  const [calloutGroups, setCalloutGroups] = useState(data.departmentTypeGroups);
 
   // Function to handle adding a new callout type
   async function handleAddNewCalloutType() {
@@ -690,6 +718,117 @@ function Settings(data: any) {
       }
     } else {
       alert("The callout type needs at least 1 char");
+    }
+  }
+
+  // Create new callout group
+  async function handleAddNewCalloutGroup() {
+    if (newCalloutGroupName.length > 1) {
+      const { data: newGroup, error } = await supabase
+        .from("callout_type_groups")
+        .insert({
+          department: data?.department?.id,
+          value: newCalloutGroupName,
+        })
+        .select();
+
+      if (error) {
+        alert(
+          "Something went wrong when adding the group to the database: " +
+            error.message
+        );
+      } else {
+        // Check if calloutGroup is not null before updating
+        if (calloutGroups) {
+          // Update the calloutTypes state with the new callout type
+          setCalloutGroups([...calloutGroups, newGroup[0]]);
+        } else {
+          // If calloutTypes is null, set the new callout type as the initial value
+          setCalloutGroups([newGroup]);
+        }
+
+        // Clear the input field after successful addition
+        setNewCalloutGroupName("");
+      }
+    } else {
+      alert("The callout group needs at least 1 char");
+    }
+  }
+
+  // Handle type name change
+  async function handleTypeNameChange(value: string, type: any) {
+    const { data, error } = await supabase
+      .from("callout_types")
+      .update({
+        value: value,
+      })
+      .eq("id", type.id);
+
+    if (error) {
+      console.error("Error updating type name:", error.message);
+    } else {
+      // Create a new array by mapping over calloutTypes
+      const updatedCalloutTypes = calloutTypes.map((t) => {
+        // If the type ID matches the updated type ID, return the modified type
+        if (t.id === type.id) {
+          return { ...t, value: value };
+        }
+        // Otherwise, return the original type
+        return t;
+      });
+
+      // Update the calloutTypes state with the modified array
+      setCalloutTypes(updatedCalloutTypes);
+    }
+  }
+
+  // Handle type group change
+  async function handleTypeGroupChange(value: any, type: any) {
+    if (value !== 0) {
+      const { data, error } = await supabase
+        .from("callout_types")
+        .update({
+          group: value,
+        })
+        .eq("id", type.id);
+
+      if (error) {
+        console.error("Error updating type group:", error.message);
+      } else {
+        // Create a new array by mapping over calloutTypes
+        const updatedCalloutTypes = calloutTypes.map((t) => {
+          // If the type ID matches the updated type ID, return the modified type
+          if (t.id === type.id) {
+            return { ...t, group: value };
+          }
+          // Otherwise, return the original type
+          return t;
+        });
+
+        // Update the calloutTypes state with the modified array
+        setCalloutTypes(updatedCalloutTypes);
+      }
+    }
+  }
+
+  // Handle delete types
+  async function handleDeleteType(type: any) {
+    const shouldDelete = window.confirm(
+      `Are you sure you want to delete the type "${type.value}"? This action cannot be undone.`
+    );
+
+    if (shouldDelete) {
+      const { error } = await supabase
+        .from("callout_types")
+        .delete()
+        .eq("id", type.id);
+
+      if (error) {
+        alert("Failed to delete the type: " + error.message);
+      } else {
+        // Remove the deleted type from the state
+        setCalloutTypes(calloutTypes.filter((t: any) => t.id !== type.id));
+      }
     }
   }
 
@@ -739,20 +878,183 @@ function Settings(data: any) {
           </Select>
         </div>
         <div className="grid grid-cols-2">
-          <div className="">Callout types:</div>
+          <div className="">Callout groups:</div>
           <div className="flex flex-col">
             <div className="text-sm">
-              {calloutTypes.map((type: any) => (
+              {calloutGroups.map((group: any) => (
                 <div
-                  key={type.id}
+                  key={group.id}
                   className="px-2 py-1 flex flex-row items-center gap-2"
                 >
-                  <div>{type.value}</div>
+                  <div>{group.value}</div>
                   <div className="ml-auto">
                     <Trash size={10} className="hover:cursor-pointer" />
                   </div>
                 </div>
               ))}
+              <div className="flex flex-col gap-1">
+                <div className="flex flex-row gap-1">
+                  <input
+                    type="text"
+                    placeholder="Add new group"
+                    className="rounded-[10px] border-accent3 text-dark w-full px-2 py-2 bg-white"
+                    onChange={(e) => setNewCalloutGroupName(e.target.value)}
+                    value={newCalloutGroupName} // Bind the input value to state
+                  />
+                  <div
+                    className="py-2 px-2 bg-white rounded-[10px] hover:cursor-pointer hover:brightness-75"
+                    onClick={() => handleAddNewCalloutGroup()}
+                  >
+                    Add
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 mt-6">
+          <div className="">Callout types:</div>
+          <div className="flex flex-col">
+            <div className="text-sm">
+              {calloutGroups.map((group: any) => (
+                <div key={group.id} className="px-2 py-1 flex flex-col gap-1">
+                  <div className="bg-white py-1 px-2 font-semibold rounded-[15px]">
+                    {group.value}
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <div>
+                      {calloutTypes.map((type: any) =>
+                        type.group === group.id ? (
+                          <div
+                            key={type.id}
+                            className="px-2 py-1 flex flex-row items-center gap-2"
+                          >
+                            <Popover>
+                              <PopoverTrigger>
+                                <div className="hover:cursor-pointer">
+                                  {type.value}
+                                </div>
+                              </PopoverTrigger>
+                              <PopoverContent>
+                                <div className="flex flex-col gap-2">
+                                  <div>Name</div>
+                                  <div className="flex flex-row gap-4">
+                                    <input
+                                      type="text"
+                                      defaultValue={type.value}
+                                      className="px-2 rounded-[15px] text-sm border w-full"
+                                      onChange={(e) =>
+                                        handleTypeNameChange(
+                                          e.target.value,
+                                          type
+                                        )
+                                      }
+                                    />
+                                  </div>
+                                  <div>Group</div>
+                                  <select
+                                    defaultValue={group.id}
+                                    className="border rounded-[15px] text-sm px-1"
+                                    onChange={(e) =>
+                                      handleTypeGroupChange(
+                                        e.target.value,
+                                        type
+                                      )
+                                    }
+                                  >
+                                    <option value={0}>---</option>
+                                    {calloutGroups.map((group: any) => (
+                                      <option key={group.id} value={group.id}>
+                                        {group.value}
+                                      </option>
+                                    ))}
+                                  </select>
+                                  <div className="text-xs">
+                                    You might need to refresh the page for
+                                    changes to take affect
+                                  </div>
+                                </div>
+                              </PopoverContent>
+                            </Popover>
+                            <div className="ml-auto">
+                              <Trash
+                                size={10}
+                                className="hover:cursor-pointer"
+                                onClick={() => handleDeleteType(type)}
+                              />
+                            </div>
+                          </div>
+                        ) : null
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+              <div className="flex flex-col gap-1">
+                {calloutTypes.some((type: any) => !type.group) && (
+                  <div className="px-2 py-1 flex flex-col items-left gap-2">
+                    <div className="bg-white py-1 px-2 font-semibold rounded-[15px]">
+                      No group
+                    </div>
+                    {calloutTypes.map((type: any) =>
+                      !type.group ? (
+                        <div
+                          key={type.id}
+                          className="px-2 py-1 flex flex-row gap-2"
+                        >
+                          <Popover>
+                            <PopoverTrigger>
+                              <div className="hover:cursor-pointer">
+                                {type.value}
+                              </div>
+                            </PopoverTrigger>
+                            <PopoverContent>
+                              <div className="flex flex-col gap-2">
+                                <div>Name</div>
+                                <div className="flex flex-row gap-4">
+                                  <input
+                                    type="text"
+                                    defaultValue={type.value}
+                                    className="px-2 rounded-[15px] text-sm border w-full"
+                                    onChange={(e) =>
+                                      handleTypeNameChange(e.target.value, type)
+                                    }
+                                  />
+                                </div>
+                                <div>Group</div>
+                                <select
+                                  className="border rounded-[15px] text-sm px-1"
+                                  onChange={(e) =>
+                                    handleTypeGroupChange(e.target.value, type)
+                                  }
+                                >
+                                  <option value={0}>---</option>
+                                  {calloutGroups.map((group: any) => (
+                                    <option key={group.id} value={group.id}>
+                                      {group.value}
+                                    </option>
+                                  ))}
+                                </select>
+                                <div className="text-xs">
+                                  You might need to refresh the page for changes
+                                  to take affect
+                                </div>
+                              </div>
+                            </PopoverContent>
+                          </Popover>
+                          <div className="ml-auto">
+                            <Trash
+                              size={10}
+                              className="hover:cursor-pointer"
+                              onClick={() => handleDeleteType(type)}
+                            />
+                          </div>
+                        </div>
+                      ) : null
+                    )}
+                  </div>
+                )}
+              </div>
               <div className="flex flex-col gap-1">
                 <div className="flex flex-row gap-1">
                   <input
