@@ -901,7 +901,7 @@ function Settings(data: any) {
         console.error("Error updating type group:", error.message);
       } else {
         // Create a new array by mapping over calloutTypes
-        const updatedCalloutTypes = calloutTypes.map((t) => {
+        const updatedCalloutTypes = calloutTypes.map((t: any) => {
           // If the type ID matches the updated type ID, return the modified type
           if (t.id === type.id) {
             return { ...t, group: value };
