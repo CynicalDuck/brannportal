@@ -62,7 +62,7 @@ export default function Home() {
           station (*)
     `
       )
-      .eq("user", session?.user.id);
+      .eq("user", session?.user?.id);
 
     if (!error) {
       setStations(data);
@@ -124,11 +124,27 @@ export default function Home() {
             <div className="flex flex-row gap-2">
               <User />
               <div>
-                {session?.user?.user_metadata?.name
-                  ? session?.user?.user_metadata?.name
-                  : session?.user?.email
-                  ? session?.user?.email
-                  : "Unknown user"}
+                {session?.user?.user_metadata?.name ? (
+                  <div
+                    className="hover:cursor-pointer"
+                    onClick={() =>
+                      (window.location.href = "/profile/" + session.user.id)
+                    }
+                  >
+                    {session?.user?.user_metadata?.name}
+                  </div>
+                ) : session?.user?.email ? (
+                  <div
+                    className="hover:cursor-pointer"
+                    onClick={() =>
+                      (window.location.href = "/profile/" + session.user.id)
+                    }
+                  >
+                    {session?.user?.email}
+                  </div>
+                ) : (
+                  "Unknown user"
+                )}
               </div>
             </div>
           </div>
@@ -223,38 +239,10 @@ export default function Home() {
                     <div className="text-3xl">
                       {formatTime(dataCallouts?.exposedToSmokeTime)}
                     </div>
-                    <div className="ml-5">in smoke</div>
                   </div>
                   <div className="flex justify-between py-4">
                     <div className="text-center mx-4">
-                      <div className="font-bold">
-                        {dataCallouts?.exposedToSmokeCount}
-                      </div>
-                      <div className="text-sm">times</div>
-                    </div>
-                    <div className="border-r border-dotted" />
-                    <div className="text-center mx-4">
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <div className="font-bold">
-                              {!isNaN(
-                                parseFloat(dataCallouts?.exposedToSmokeTime)
-                              )
-                                ? `${
-                                    parseFloat(
-                                      dataCallouts?.exposedToSmokeTime
-                                    ) * 0.0000000386
-                                  }%`
-                                : "Invalid value"}
-                            </div>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <TooltipContentText />
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                      <div className="text-sm">Heighten risk of cancer (*)</div>
+                      <div className="text-sm">time in smoke</div>
                     </div>
                   </div>
                 </div>
@@ -267,7 +255,6 @@ export default function Home() {
                 <div className="flex flex-col px-6">
                   <div className="flex flex-row">
                     <div className="text-5xl">{stations?.length}</div>
-                    <div className="ml-5">Stations connected</div>
                   </div>
                 </div>
               </FeaturedCard>

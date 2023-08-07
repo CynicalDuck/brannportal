@@ -211,6 +211,8 @@ function CreateNew() {
     exposedToSmokeTime: "",
   });
 
+  // Functions
+
   // Function to handle form submission
   async function handleSubmit(e: any) {
     e.preventDefault();

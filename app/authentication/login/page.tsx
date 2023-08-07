@@ -101,12 +101,24 @@ export default function Login() {
       });
 
       if (data.user) {
-        setSignUp(false);
-        setSignUpSuccess(true);
+        const { data: dataProfile, error: errorProfile } = await supabase
+          .from("user_profiles")
+          .insert({
+            user: data.user.id,
+            name: name,
+          });
 
-        setTimeout(() => {
-          setSignUpSuccess(false);
-        }, 3000);
+        if (dataProfile && !errorProfile) {
+          setSignUp(false);
+          setSignUpSuccess(true);
+
+          setTimeout(() => {
+            setSignUpSuccess(false);
+          }, 3000);
+        } else {
+          setError(true);
+          setErrorText(errorProfile ? errorProfile.message : "");
+        }
       }
       if (errorCreate) {
         setError(true);
