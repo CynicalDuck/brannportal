@@ -12,6 +12,9 @@ import {
   BarChart,
 } from "react-feather";
 
+// Import hooks
+import { useSession } from "@/hooks/authentication/useSession";
+
 // Import components
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
@@ -21,6 +24,9 @@ interface Props {
 }
 
 export default function NavSide({ children, ...props }: Props) {
+  // Auth
+  const { session } = useSession();
+
   return (
     <div className="sticky top-0 h-screen bg-light">
       <div className="flex flex-col bg-dark h-screen px-4 rounded-r-[20px] gap-5 pt-3 shadow-sm shadow-black">
@@ -39,6 +45,14 @@ export default function NavSide({ children, ...props }: Props) {
         <a href="/station" className="text-white hover:text-light">
           <Navigation className="mx-auto" />
         </a>
+        {session?.user && (
+          <a
+            href={"/profile/" + session?.user?.id}
+            className="text-white hover:text-light "
+          >
+            <User className="mx-auto" />
+          </a>
+        )}
         <a href="/settings" className="text-white hover:text-light">
           <Settings className="mx-auto" />
         </a>

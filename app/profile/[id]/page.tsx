@@ -73,6 +73,28 @@ export default function Profile({ params }: { params: { id: string } }) {
       ) {
         setHaveAccess(true);
       }
+    } else {
+      // If the user is trying to see their own profile, but it does not exist we will create it for them
+      if (session?.user.id === params.id) {
+        // First double check if there is a profile connected this user
+        const { data, error } = await supabase
+          .from("user_profiles")
+          .select("*")
+          .eq("user", params.id);
+
+        if (data?.length === 0) {
+          const { data: dataCreate, error: errorCreate } = await supabase
+            .from("user_profiles")
+            .insert({
+              name: session?.user?.user_metadata?.name,
+              user: session?.user?.id,
+            });
+
+          if (!errorCreate) {
+            window.location.reload();
+          }
+        }
+      }
     }
   }
 
