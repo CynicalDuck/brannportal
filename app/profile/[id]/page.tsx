@@ -617,7 +617,6 @@ export default function Profile({ params }: { params: { id: string } }) {
 
 function UserProfile(data: any) {
   // States
-  console.log(data);
 
   // Functions
   const formatDateAndTime = (dateTimeString: any) => {
