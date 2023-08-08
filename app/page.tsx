@@ -163,6 +163,7 @@ export default function Home() {
                     <SelectItem value="callouts">Callouts</SelectItem>
                     <SelectItem value="department">Department</SelectItem>
                     <SelectItem value="station">Station</SelectItem>
+                    <SelectItem value="profile">Profile</SelectItem>
                     <SelectItem value="settings">Settings</SelectItem>
                     <SelectItem value="authentication/logout">
                       Sign out

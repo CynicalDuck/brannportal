@@ -23,6 +23,7 @@ import { Progress } from "@/components/ui/progress";
 // Import hooks
 import { useSession } from "@/hooks/authentication/useSession";
 import { useFetchUserCallouts } from "@/hooks/fetch/useFetchUserCallouts";
+import MapCallouts from "@/components/Maps/MapCallouts";
 
 // Types
 
@@ -32,13 +33,13 @@ export default function Profile({ params }: { params: { id: string } }) {
   const [haveAccess, setHaveAccess] = useState<boolean>(false);
   const [activeProfile, setActiveProfile] = useState<any>(null);
   const [showPendingRequests, setShowPendingRequests] = useState(false);
+  const [profileCallouts, setProfileCallouts] = useState<any>(null);
 
   // Auth
   const { session } = useSession();
 
   // Fetching
-  // All callouts
-  const { data: dataCallouts, error: errorCallouts } = useFetchUserCallouts();
+
   // get profile for the given user
   async function fetchUserProfile() {
     const { data, error } = await supabase
@@ -53,6 +54,76 @@ export default function Profile({ params }: { params: { id: string } }) {
       );
     } else {
       setActiveProfile(data[0]);
+
+      // Get the callouts for the given user
+      // Fetch all callouts for the user
+      const { data: dataCallouts, error: errorCallouts } = await supabase
+        .from("user_connection_callout")
+        .select(`*, callout(*, department (*), station (*))`)
+        .eq("user", params.id);
+
+      if (dataCallouts) {
+        var returnData = {};
+
+        // Calculate the count of callouts with date_start within the current month
+        const currentDate = new Date();
+        const currentYear = currentDate.getFullYear();
+        const currentMonth = currentDate.getMonth() + 1; // January is 0, so we add 1 to get the correct month number
+
+        const countThisMonth = dataCallouts.filter(
+          (callout: any) =>
+            new Date(callout.callout.date_start).getFullYear() ===
+              currentYear &&
+            new Date(callout.callout.date_start).getMonth() + 1 === currentMonth
+        ).length;
+
+        // Calculate the count of callouts with date_start within the current year
+        const countThisYear = dataCallouts.filter(
+          (callout: any) =>
+            new Date(callout.callout.date_start).getFullYear() === currentYear
+        ).length;
+
+        // Calculate the count of callouts with date_start within the current day
+        const currentDay = currentDate.getDate(); // Get the day of the current date
+        const countToday = dataCallouts.filter(
+          (callout: any) =>
+            new Date(callout.callout.date_start).getFullYear() ===
+              currentYear &&
+            new Date(callout.callout.date_start).getMonth() + 1 ===
+              currentMonth &&
+            new Date(callout.callout.date_start).getDate() === currentDay
+        ).length;
+
+        // Get data on smoke exposure
+        var exposedMinutes = 0;
+        var countExposed = 0;
+        dataCallouts.forEach((item) => {
+          if (item.callout.exposed_to_smoke) {
+            exposedMinutes =
+              exposedMinutes + item.callout.exposed_to_smoke_time;
+            countExposed++;
+          }
+        });
+
+        // Sort the data based on the 'date_start' field from the related 'callout' table
+        const sortedData = dataCallouts.sort((a: any, b: any) => {
+          const dateA: any = new Date(a.callout?.date_start || "");
+          const dateB: any = new Date(b.callout?.date_start || "");
+          return dateB - dateA;
+        });
+
+        returnData = {
+          callouts: sortedData,
+          countAllTime: sortedData.length,
+          countThisMonth: countThisMonth,
+          countThisYear: countThisYear,
+          countToday: countToday,
+          exposedToSmokeTime: exposedMinutes,
+          exposedToSmokeCount: countExposed,
+        };
+
+        setProfileCallouts(returnData);
+      }
     }
   }
 
@@ -306,8 +377,8 @@ export default function Profile({ params }: { params: { id: string } }) {
           timeDifferenceMinutes += timeDifferenceMillis / (1000 * 60);
         });
 
-        // Define level-up time threshold (15 hours = 900 minutes)
-        const levelUpThresholdMinutes = 900;
+        // Define level-up time threshold (30 hours = 1800 minutes)
+        const levelUpThresholdMinutes = 1800;
 
         // Calculate game_level
         const game_level = Math.floor(
@@ -386,11 +457,12 @@ export default function Profile({ params }: { params: { id: string } }) {
               <SelectGroup>
                 <SelectLabel>Pages</SelectLabel>
                 <SelectItem value="home">Home</SelectItem>
-                <SelectItem value="callouts" disabled>
-                  Callouts
-                </SelectItem>
+                <SelectItem value="callouts">Callouts</SelectItem>
                 <SelectItem value="department">Department</SelectItem>
                 <SelectItem value="station">Station</SelectItem>
+                <SelectItem value="profile" disabled>
+                  Profile
+                </SelectItem>
                 <SelectItem value="settings">Settings</SelectItem>
                 <SelectItem value="authentication/logout">Sign out</SelectItem>
               </SelectGroup>
@@ -536,6 +608,7 @@ export default function Profile({ params }: { params: { id: string } }) {
           currentUser={session?.user}
           haveAccess={haveAccess}
           activeProfile={activeProfile}
+          callouts={profileCallouts}
         />
       )}
     </div>
@@ -544,6 +617,7 @@ export default function Profile({ params }: { params: { id: string } }) {
 
 function UserProfile(data: any) {
   // States
+  console.log(data);
 
   return (
     <div className="w-full mt-4">
@@ -554,12 +628,51 @@ function UserProfile(data: any) {
             <div className="text-2xl">{data.activeProfile?.game_level}</div>
           </div>
         </div>
-        <Progress
-          value={parseFloat(data.activeProfile?.game_time_progress_percentage)}
-        />
+        <div className="flex flex-col gap-0 w-full">
+          <Progress
+            value={parseFloat(
+              data.activeProfile?.game_time_progress_percentage
+            )}
+            className="mt-0 lg:mt-5"
+          />
+          <div className="flex flex-row w-full pl-5 pr-5 text-xs hidden lg:block">
+            {/* Statistics */}
+            <div className="flex gap-2 justify-between mt-1">
+              <div className="">
+                Callouts all time: {data?.callouts?.countAllTime}
+              </div>
+              <div className="">
+                Callouts today: {data?.callouts?.countToday}
+              </div>
+              <div className="">
+                Callouts this month: {data?.callouts?.countThisMonth}
+              </div>
+              <div className="">
+                Callouts this year: {data?.callouts?.countThisYear}
+              </div>
+              <div className="">
+                Smoke dives: {data?.callouts?.exposedToSmokeCount}
+              </div>
+              <div className="">
+                Time in smoke: {data?.callouts?.exposedToSmokeTime} minutes
+              </div>
+            </div>
+          </div>
+        </div>
         <div className="text-xs">
           {parseInt(data.activeProfile?.game_time_progress_percentage) + "%"}
         </div>
+      </div>
+      <div className="h-[300px] md:h-[600px] xl:h-[600px] mt-4">
+        <MapCallouts
+          center={
+            data.callouts?.callouts[0]
+              ? data.callouts?.callouts[0].callout
+              : null
+          }
+          heatmap={true}
+          heatmapLocations={data?.callouts?.callouts}
+        />
       </div>
     </div>
   );
