@@ -27,6 +27,7 @@ import { useFetchUserCallouts } from "@/hooks/fetch/useFetchUserCallouts";
 export default function Callouts() {
   // States
   const [createNew, setCreateNew] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   // Auth
   const { session } = useSession();
@@ -53,7 +54,10 @@ export default function Callouts() {
       </div>
       <div className="lg:flex lg:justify-end lg:gap-2">
         <div className="md:hidden">
-          <Select onValueChange={(e) => window.location.assign(e)}>
+          <Select
+            onValueChange={(e) => window.location.assign(e)}
+            onOpenChange={() => setIsMenuOpen(!isMenuOpen)}
+          >
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Menu" />
             </SelectTrigger>
@@ -66,6 +70,9 @@ export default function Callouts() {
                 </SelectItem>
                 <SelectItem value="department">Department</SelectItem>
                 <SelectItem value="station">Station</SelectItem>
+                <SelectItem value={"profile/" + session?.user?.id}>
+                  Profile
+                </SelectItem>
                 <SelectItem value="settings">Settings</SelectItem>
                 <SelectItem value="authentication/logout">Sign out</SelectItem>
               </SelectGroup>
@@ -75,7 +82,12 @@ export default function Callouts() {
       </div>
       {/* Use flex-grow to let TableCallout take up remaining space */}
       <div className="flex-grow w-full">
-        {!createNew && <TableCallout data={dataCallouts?.data} address />}
+        {!createNew && (
+          <TableCallout
+            data={!isMenuOpen ? dataCallouts?.data : null}
+            address
+          />
+        )}
         {createNew && <CreateNew />}
       </div>
     </div>

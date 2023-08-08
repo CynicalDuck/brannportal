@@ -77,7 +77,7 @@ export default function TableCallout({
         <TableCaption>{title}</TableCaption>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-[100px]">Callout</TableHead>
+            <TableHead className="w-[100px] hidden lg:block">Callout</TableHead>
             <TableHead className="w-[300px]">Category</TableHead>
             {address && <TableHead className="w-[700px]">Address</TableHead>}
             <TableHead className="w-[300px]">Time</TableHead>
@@ -90,7 +90,7 @@ export default function TableCallout({
               className="hover:bg-light hover:cursor-pointer"
               onClick={() => (window.location.href = "callouts/" + callout?.id)}
             >
-              <TableCell className="font-medium">
+              <TableCell className="font-medium hidden lg:block">
                 {callout?.callout_id ? callout?.callout_id : callout?.id}
               </TableCell>
               <TableCell>{callout?.type}</TableCell>

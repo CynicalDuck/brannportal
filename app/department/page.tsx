@@ -427,7 +427,9 @@ export default function Department() {
                   Department
                 </SelectItem>
                 <SelectItem value="station">Station</SelectItem>
-                <SelectItem value="profile">Profile</SelectItem>
+                <SelectItem value={"profile/" + session?.user?.id}>
+                  Profile
+                </SelectItem>
                 <SelectItem value="settings">Settings</SelectItem>
                 <SelectItem value="authentication/logout">Sign out</SelectItem>
               </SelectGroup>

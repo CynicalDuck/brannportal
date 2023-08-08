@@ -116,10 +116,13 @@ export default function CalloutDetails({ params }: { params: { id: string } }) {
                   <SelectItem value="callouts" disabled>
                     Callouts
                   </SelectItem>
-                  <SelectItem value="department">Department</SelectItem>
-                  <SelectItem value="station">Station</SelectItem>
-                  <SelectItem value="settings">Settings</SelectItem>
-                  <SelectItem value="authentication/logout">
+                  <SelectItem value="/department">Department</SelectItem>
+                  <SelectItem value="/station">Station</SelectItem>
+                  <SelectItem value={"profile/" + session?.user?.id}>
+                    Profile
+                  </SelectItem>
+                  <SelectItem value="/settings">Settings</SelectItem>
+                  <SelectItem value="/authentication/logout">
                     Sign out
                   </SelectItem>
                 </SelectGroup>

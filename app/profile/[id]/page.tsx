@@ -456,15 +456,15 @@ export default function Profile({ params }: { params: { id: string } }) {
             <SelectContent>
               <SelectGroup>
                 <SelectLabel>Pages</SelectLabel>
-                <SelectItem value="home">Home</SelectItem>
-                <SelectItem value="callouts">Callouts</SelectItem>
-                <SelectItem value="department">Department</SelectItem>
-                <SelectItem value="station">Station</SelectItem>
+                <SelectItem value="/">Home</SelectItem>
+                <SelectItem value="/callouts">Callouts</SelectItem>
+                <SelectItem value="/department">Department</SelectItem>
+                <SelectItem value="/station">Station</SelectItem>
                 <SelectItem value="profile" disabled>
                   Profile
                 </SelectItem>
-                <SelectItem value="settings">Settings</SelectItem>
-                <SelectItem value="authentication/logout">Sign out</SelectItem>
+                <SelectItem value="/settings">Settings</SelectItem>
+                <SelectItem value="/authentication/logout">Sign out</SelectItem>
               </SelectGroup>
             </SelectContent>
           </Select>
@@ -619,6 +619,18 @@ function UserProfile(data: any) {
   // States
   console.log(data);
 
+  // Functions
+  const formatDateAndTime = (dateTimeString: any) => {
+    const dateTime = new Date(dateTimeString);
+    const day = String(dateTime.getMonth() + 1).padStart(2, "0");
+    const month = String(dateTime.getDate()).padStart(2, "0");
+    const year = String(dateTime.getFullYear()).slice(2);
+    const hours = String(dateTime.getHours()).padStart(2, "0");
+    const minutes = String(dateTime.getMinutes()).padStart(2, "0");
+
+    return `${month}.${day}.${year} - ${hours}:${minutes}`;
+  };
+
   return (
     <div className="w-full mt-4">
       <div className="flex items-center flex-row gap-2 w-full">
@@ -663,16 +675,43 @@ function UserProfile(data: any) {
           {parseInt(data.activeProfile?.game_time_progress_percentage) + "%"}
         </div>
       </div>
-      <div className="h-[300px] md:h-[600px] xl:h-[600px] mt-4">
-        <MapCallouts
-          center={
-            data.callouts?.callouts[0]
-              ? data.callouts?.callouts[0].callout
-              : null
-          }
-          heatmap={true}
-          heatmapLocations={data?.callouts?.callouts}
-        />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className=" col-span-1 lg:col-span-2">
+          <div className="h-[300px] md:h-[600px] xl:h-[600px] mt-4">
+            <MapCallouts
+              center={
+                data.callouts?.callouts[0]
+                  ? data.callouts?.callouts[0].callout
+                  : null
+              }
+              heatmap={true}
+              heatmapLocations={data?.callouts?.callouts}
+            />
+          </div>
+        </div>
+        <div className="bg-white rounded-[20px] mt-4 mb-9 py-2 px-2">
+          <div className="flex flex-col gap-2">
+            <div className="font-semibold">Latest activity</div>
+            {data.callouts?.callouts
+              .slice(0, 22) // Limit the array to the first 22 items
+              .map((callout: any) => {
+                console.log(callout);
+                return (
+                  <div className="text-xs flex flex-row gap-1">
+                    {
+                      formatDateAndTime(
+                        callout.callout.date_start +
+                          " " +
+                          callout.callout.time_start
+                      ).split("-")[0]
+                    }
+                    {" - "}
+                    {callout.callout.type}
+                  </div>
+                );
+              })}
+          </div>
+        </div>
       </div>
     </div>
   );
