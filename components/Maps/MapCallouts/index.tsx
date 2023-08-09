@@ -163,7 +163,6 @@ export default function MapCallouts({
         center={mapCenter ? mapCenter : mapCenterDefault}
         mapTypeId={google.maps.MapTypeId.ROADMAP}
         mapContainerStyle={{ width: "100%", height: "100%" }}
-        onLoad={() => console.log("Map Component Loaded...")}
       >
         {heatmap ? (
           heatmapData ? (

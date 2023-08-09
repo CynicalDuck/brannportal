@@ -617,6 +617,7 @@ export default function Profile({ params }: { params: { id: string } }) {
 
 function UserProfile(data: any) {
   // States
+  console.log(data);
 
   // Functions
   const formatDateAndTime = (dateTimeString: any) => {
@@ -629,6 +630,12 @@ function UserProfile(data: any) {
 
     return `${month}.${day}.${year} - ${hours}:${minutes}`;
   };
+
+  function formatMinutesToHoursAndMinutes(minutes: number) {
+    const hours = Math.floor(minutes / 60);
+    const remainingMinutes = minutes % 60;
+    return `${hours}h ${remainingMinutes}m`;
+  }
 
   return (
     <div className="w-full mt-4">
@@ -667,6 +674,19 @@ function UserProfile(data: any) {
               <div className="">
                 Time in smoke: {data?.callouts?.exposedToSmokeTime} minutes
               </div>
+              <div className="">
+                Time on call:{" "}
+                {formatMinutesToHoursAndMinutes(
+                  parseInt(data?.activeProfile?.game_time)
+                )}
+              </div>
+              <div className="">
+                Time until next level:{" "}
+                {formatMinutesToHoursAndMinutes(
+                  parseInt(data?.activeProfile?.game_time_next_level) -
+                    parseInt(data?.activeProfile?.game_time)
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -694,7 +714,6 @@ function UserProfile(data: any) {
             {data.callouts?.callouts
               .slice(0, 22) // Limit the array to the first 22 items
               .map((callout: any) => {
-                console.log(callout);
                 return (
                   <div className="text-xs flex flex-row gap-1">
                     {

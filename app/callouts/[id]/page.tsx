@@ -12,6 +12,10 @@ import {
   Box,
   PenTool,
   Map,
+  CloudRain,
+  CloudSnow,
+  Cloud,
+  Sun,
 } from "react-feather";
 
 // Import components
@@ -37,6 +41,7 @@ export default function CalloutDetails({ params }: { params: { id: string } }) {
   const [activeCallout, setActiveCallout] = useState<any>(null);
   const [connections, setConnections] = useState<any>(null);
   const [edit, setEdit] = useState(false);
+  const [weather, setWeather] = useState<any>(null);
 
   // Auth
   const { session } = useSession();
@@ -73,6 +78,36 @@ export default function CalloutDetails({ params }: { params: { id: string } }) {
     }
   }
 
+  async function fetchWeather() {
+    if (activeCallout?.latitude && activeCallout?.longitude) {
+      const apiUrl =
+        "https://archive-api.open-meteo.com/v1/archive?latitude=" +
+        activeCallout.latitude +
+        "&longitude=" +
+        activeCallout.longitude +
+        "&start_date=" +
+        activeCallout.date_start +
+        "&end_date=" +
+        activeCallout.date_end +
+        "&daily=temperature_2m_mean,rain_sum,snowfall_sum&timezone=Europe%2FLondon";
+
+      // Fetch data from the API
+      fetch(apiUrl)
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then((data) => {
+          setWeather(data);
+        })
+        .catch((error) => {
+          alert("Fetch error: " + error);
+        });
+    }
+  }
+
   // Functions
 
   // Use Effects
@@ -83,6 +118,14 @@ export default function CalloutDetails({ params }: { params: { id: string } }) {
 
     fetchCalloutData();
   }, [session]);
+
+  useEffect(() => {
+    const fetchWeatherData = async () => {
+      const data = await fetchWeather();
+    };
+
+    fetchWeatherData();
+  }, [activeCallout]);
 
   // Return
   if (connections?.length > 0) {
@@ -133,7 +176,10 @@ export default function CalloutDetails({ params }: { params: { id: string } }) {
         {/* Use flex-grow to let TableCallout take up remaining space */}
         <div className="flex-grow w-full">
           {!edit && activeCallout && (
-            <Dashboard callout={activeCallout ? activeCallout : null} />
+            <Dashboard
+              callout={activeCallout ? activeCallout : null}
+              weather={weather ? weather : null}
+            />
           )}
           {edit && <Edit callout={activeCallout ? activeCallout : null} />}
         </div>
@@ -165,7 +211,7 @@ function Dashboard(data: any) {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         <FeaturedCard
           title="Date"
           icon={<Calendar />}
@@ -215,6 +261,36 @@ function Dashboard(data: any) {
                   " - " +
                   data.callout.station.name}
               </div>
+            </div>
+          </div>
+        </FeaturedCard>
+        <FeaturedCard
+          title="Weather"
+          icon={<Sun />}
+          className={"rounded-[20px] bg-primary w-full"}
+        >
+          <div className="flex flex-col px-6">
+            <div className="flex flex-row gap-5">
+              {!data?.weather ? (
+                <div>Could not get the weather for this date</div>
+              ) : (
+                <>
+                  {data.weather.daily.rain_sum[0] > 0 && (
+                    <CloudRain size={60} />
+                  )}
+                  {data.weather.daily.snowfall_sum[0] > 0 && (
+                    <CloudSnow size={60} />
+                  )}
+                  {data.weather.daily.rain_sum[0] === 0 &&
+                    data.weather.daily.snowfall_sum[0] === 0 && (
+                      <Cloud size={60} />
+                    )}
+                  <div className="flex flex-row gap-0">
+                    {data.weather.daily.temperature_2m_mean[0]}{" "}
+                    <div className="text-xs">o</div>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </FeaturedCard>
