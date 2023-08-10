@@ -412,6 +412,7 @@ export default function Profile({ params }: { params: { id: string } }) {
             game_time_next_level: game_time_next_level,
             game_time_prev_level: game_time_prev_level,
             game_time_progress_percentage: progressPercentage,
+            callouts_total: data.length,
           })
           .eq("user", activeProfile?.user);
       }

@@ -271,8 +271,8 @@ function Dashboard(data: any) {
         >
           <div className="flex flex-col px-6">
             <div className="flex flex-row gap-5">
-              {!data?.weather ? (
-                <div>Could not get the weather for this date</div>
+              {!data?.weather?.daily?.temperature_2m_mean[0] ? (
+                <div>Weather data for this date is not ready yet</div>
               ) : (
                 <>
                   {data.weather.daily.rain_sum[0] > 0 && (
@@ -496,7 +496,6 @@ function Edit(data: any) {
 
     // If there are no errors, submit the form
     if (Object.keys(errors).every((key) => errors[key] === "")) {
-      console.log(lng);
       const { data: dataUpdate, error: errorUpdate } = await supabase
         .from("callouts")
         .update({

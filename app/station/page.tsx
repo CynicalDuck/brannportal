@@ -34,6 +34,15 @@ import {
 import Progress from "@/components/Loaders/Progress";
 import AutocompleteAddress from "@/components/Maps/Autocomplete";
 import MapCallouts from "@/components/Maps/MapCallouts";
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 import {
   Chart as ChartJS,
@@ -73,6 +82,7 @@ export default function Station() {
   const [stationCallouts, setStationCallouts] = useState<any>();
   const [stationTypes, setStationTypes] = useState<any>();
   const [stationTypeGroups, setStationTypeGroups] = useState<any>();
+  const [stationUserProfiles, setStationUserProfiles] = useState<any>();
 
   // Fetching
 
@@ -151,9 +161,7 @@ export default function Station() {
           .eq("department", activeStation.department.id);
 
         if (error) {
-          alert(
-            "There was an error when fetching the user count: " + error.message
-          );
+          alert("There was an error when fetching the types: " + error.message);
         } else {
           setStationTypes(data);
         }
@@ -170,7 +178,7 @@ export default function Station() {
 
         if (error) {
           alert(
-            "There was an error when fetching the user count: " + error.message
+            "There was an error when fetching the type groups: " + error.message
           );
         } else {
           setStationTypeGroups(data);
@@ -300,6 +308,32 @@ export default function Station() {
     fetchDepartmentCalloutTypes();
     fetchDepartmentCalloutTypeGroups();
   }, [activeStation]);
+
+  useEffect(() => {
+    async function fetchStationUserProfiles() {
+      if (stationUsers) {
+        const userIDs = stationUsers.map((user: any) => user.user); // Extract user IDs
+
+        const { data, error } = await supabase
+          .from("user_profiles")
+          .select()
+          .in("user", userIDs); // Use the 'in' operator with extracted user IDs
+
+        if (error) {
+          alert(
+            "There was an error when fetching the connected users: " +
+              error.message
+          );
+        } else {
+          // Process the fetched user profiles in the 'data' array
+          const sortedData = data.sort((a, b) => b.game_level - a.game_level);
+          setStationUserProfiles(sortedData);
+        }
+      }
+    }
+
+    fetchStationUserProfiles();
+  }, [stationUsers]);
 
   // Return
 
@@ -479,6 +513,7 @@ export default function Station() {
           stationCallouts={stationCallouts}
           stationTypes={stationTypes}
           stationTypeGroups={stationTypeGroups}
+          stationUserProfiles={stationUserProfiles}
         />
       )}
       {active == "Settings" && (
@@ -561,6 +596,14 @@ function Dashboard(station: any) {
     },
   };
 
+  // Functions
+
+  function formatMinutesToHoursAndMinutes(minutes: number) {
+    const hours = Math.floor(minutes / 60);
+    const remainingMinutes = minutes % 60;
+    return `${hours}h ${remainingMinutes}m`;
+  }
+
   return (
     <div className="flex flex-col gap-2 lg:gap-12 lg:flex-row w-full">
       <div className="flex flex-col 2xl:w-1/2">
@@ -622,6 +665,44 @@ function Dashboard(station: any) {
             heatmap={true}
             heatmapLocations={station?.stationCallouts?.data}
           />
+        </div>
+        <div className="bg-white py-2 px-2 rounded-[20px]">
+          <Table>
+            <TableCaption>Leaderboard</TableCaption>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[100px]">Rank</TableHead>
+                <TableHead className="w-[100px]">Name</TableHead>
+                <TableHead className="w-[100px]">Callouts</TableHead>
+                <TableHead className="w-[100px]">Time</TableHead>
+                <TableHead className="w-[100px]">Level</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {station?.stationUserProfiles?.map(
+                (profile: any, index: number) => (
+                  <TableRow key={profile.id}>
+                    <TableCell className="">{index + 1}</TableCell>
+                    <TableCell>
+                      <div
+                        className="hover:text-primary hover:cursor-pointer"
+                        onClick={() =>
+                          (window.location.href = "/profile/" + profile.user)
+                        }
+                      >
+                        {profile.name}
+                      </div>
+                    </TableCell>
+                    <TableCell>{profile.callouts_total}</TableCell>
+                    <TableCell className="">
+                      {formatMinutesToHoursAndMinutes(profile.game_time)}
+                    </TableCell>
+                    <TableCell className="">{profile.game_level}</TableCell>
+                  </TableRow>
+                )
+              )}
+            </TableBody>
+          </Table>
         </div>
       </div>
       <div className="flex flex-col w-1/2 hidden xl:block">
