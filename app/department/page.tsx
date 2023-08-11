@@ -87,6 +87,8 @@ export default function Department() {
   const [departmentTypeGroups, setDepartmentTypeGroups] = useState<any>();
   const [departmentStationCount, setDepartmentStationCount] =
     useState<number>();
+  const [departmentCalloutRoles, setDepartmentCalloutRoles] =
+    useState<any>(null);
 
   // Fetching
 
@@ -327,11 +329,30 @@ export default function Department() {
       }
     }
 
+    async function fetchDepartmentCalloutRoles() {
+      if (activeDepartment) {
+        const { data, error } = await supabase
+          .from("callout_roles")
+          .select("*")
+          .eq("department", activeDepartment.id);
+
+        if (error) {
+          alert(
+            "There was an error when fetching the callout roles: " +
+              error.message
+          );
+        } else {
+          setDepartmentCalloutRoles(data);
+        }
+      }
+    }
+
     fetchUsers();
     fetchStationCount();
     activeDepartment ? fetchDepartmentCallouts(activeDepartment.id) : null;
     fetchDepartmentCalloutTypes();
     fetchDepartmentCalloutTypeGroups();
+    fetchDepartmentCalloutRoles();
   }, [activeDepartment]);
 
   // Return
@@ -514,6 +535,7 @@ export default function Department() {
           departmentTypes={departmentTypes}
           departmentTypeGroups={departmentTypeGroups}
           departmentUsers={departmentUsers}
+          departmentCalloutRoles={departmentCalloutRoles}
         />
       )}
       {active == "Create" && <CreateNew />}
@@ -663,6 +685,13 @@ function Dashboard(department: any) {
             </div>
           </FeaturedCard>
         </div>
+        <div className="h-[300px] md:h-[600px] xl:h-[600px] mt-4">
+          <MapCallouts
+            center={department.department ? department.department : null}
+            heatmap={true}
+            heatmapLocations={department?.departmentCallouts?.data}
+          />
+        </div>
         {/* <div className="mt-10">
           {department.departmentCallouts?.data && (
             <TableCallout
@@ -681,15 +710,6 @@ function Dashboard(department: any) {
                 <Pie data={dataPie} />
                 Number of callouts each month
                 <Bar data={dataBar} options={barSettings} />
-                <div className="h-[300px] md:h-[600px] xl:h-[600px]">
-                  <MapCallouts
-                    center={
-                      department.department ? department.department : null
-                    }
-                    heatmap={true}
-                    heatmapLocations={department?.departmentCallouts?.data}
-                  />
-                </div>
               </div>
             </BasicCard>
           </div>
@@ -709,6 +729,10 @@ function Settings(data: any) {
   const [messageName, setMessageName] = useState("");
   const [showMessageAbbr, setShowMessageAbbr] = useState(false);
   const [messageAbbr, setMessageAbbr] = useState("");
+  const [calloutRoles, setCalloutRoles] = useState<any>(
+    data.departmentCalloutRoles
+  );
+  const [newCalloutRoleName, setNewCalloutRoleName] = useState("");
 
   // Function to change the name of the department
   async function handleNameChange(value: string) {
@@ -936,6 +960,88 @@ function Settings(data: any) {
       } else {
         // Remove the deleted type from the state
         setCalloutTypes(calloutTypes.filter((t: any) => t.id !== type.id));
+      }
+    }
+  }
+
+  // Function to handle adding a new callout role
+  async function handleAddNewCalloutRole() {
+    if (newCalloutRoleName.length > 1) {
+      const { data: newRole, error } = await supabase
+        .from("callout_roles")
+        .insert({
+          department: data?.department?.id,
+          value: newCalloutRoleName,
+        })
+        .select();
+
+      if (error) {
+        alert(
+          "Something went wrong when adding the type to the database: " +
+            error.message
+        );
+      } else {
+        // Check if calloutRoles is not null before updating
+        if (calloutRoles) {
+          // Update the calloutRoles state with the new callout type
+          setCalloutRoles([...calloutRoles, newRole[0]]);
+        } else {
+          // If calloutRoles is null, set the new callout role as the initial value
+          setCalloutRoles([newRole]);
+        }
+
+        // Clear the input field after successful addition
+        setNewCalloutRoleName("");
+      }
+    } else {
+      alert("The callout role needs at least 1 char");
+    }
+  }
+
+  // Handle role name change
+  async function handleRoleNameChange(value: string, type: any) {
+    const { data, error } = await supabase
+      .from("callout_roles")
+      .update({
+        value: value,
+      })
+      .eq("id", type.id);
+
+    if (error) {
+      console.error("Error updating role name:", error.message);
+    } else {
+      // Create a new array by mapping over calloutRoles
+      const updatedCalloutRoles = calloutRoles.map((t: any) => {
+        // If the role ID matches the updated type ID, return the modified role
+        if (t.id === type.id) {
+          return { ...t, value: value };
+        }
+        // Otherwise, return the original role
+        return t;
+      });
+
+      // Update the calloutRoles state with the modified array
+      setCalloutRoles(updatedCalloutRoles);
+    }
+  }
+
+  // Handle delete role
+  async function handleDeleteRole(role: any) {
+    const shouldDelete = window.confirm(
+      `Are you sure you want to delete the role "${role.value}"? This action cannot be undone.`
+    );
+
+    if (shouldDelete) {
+      const { error } = await supabase
+        .from("callout_roles")
+        .delete()
+        .eq("id", role.id);
+
+      if (error) {
+        alert("Failed to delete the role: " + error.message);
+      } else {
+        // Remove the deleted type from the state
+        setCalloutRoles(calloutRoles.filter((t: any) => t.id !== role.id));
       }
     }
   }
@@ -1219,6 +1325,77 @@ function Settings(data: any) {
                   <div
                     className="py-2 px-2 bg-white rounded-[10px] hover:cursor-pointer hover:brightness-75"
                     onClick={() => handleAddNewCalloutType()}
+                  >
+                    Add
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 mt-6">
+          <div className="">Callout Roles:</div>
+          <div className="flex flex-col">
+            <div className="text-sm">
+              <div className="flex flex-col gap-1">
+                <div>
+                  {calloutRoles?.length === 0 && <div>No roles added yet</div>}
+                  {calloutRoles.map((role: any) =>
+                    role.id ? (
+                      <div
+                        key={role.id}
+                        className="px-2 py-1 flex flex-row items-center gap-2"
+                      >
+                        <Popover>
+                          <PopoverTrigger>
+                            <div className="hover:cursor-pointer">
+                              {role.value}
+                            </div>
+                          </PopoverTrigger>
+                          <PopoverContent>
+                            <div className="flex flex-col gap-2">
+                              <div>Name</div>
+                              <div className="flex flex-row gap-4">
+                                <input
+                                  type="text"
+                                  defaultValue={role.value}
+                                  className="px-2 rounded-[15px] text-sm border w-full"
+                                  onChange={(e) =>
+                                    handleRoleNameChange(e.target.value, role)
+                                  }
+                                />
+                              </div>
+                              <div className="text-xs">
+                                You might need to refresh the page for changes
+                                to take affect
+                              </div>
+                            </div>
+                          </PopoverContent>
+                        </Popover>
+                        <div className="ml-auto">
+                          <Trash
+                            size={10}
+                            className="hover:cursor-pointer"
+                            onClick={() => handleDeleteRole(role)}
+                          />
+                        </div>
+                      </div>
+                    ) : null
+                  )}
+                </div>
+              </div>
+              <div className="flex flex-col gap-1">
+                <div className="flex flex-row gap-1">
+                  <input
+                    type="text"
+                    placeholder="Add new role"
+                    className="rounded-[10px] border-accent3 text-dark w-full px-2 py-2 bg-white"
+                    onChange={(e) => setNewCalloutRoleName(e.target.value)}
+                    value={newCalloutRoleName} // Bind the input value to state
+                  />
+                  <div
+                    className="py-2 px-2 bg-white rounded-[10px] hover:cursor-pointer hover:brightness-75"
+                    onClick={() => handleAddNewCalloutRole()}
                   >
                     Add
                   </div>

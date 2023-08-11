@@ -19,6 +19,26 @@ import {
 } from "@/components/ui/select";
 import BasicButton from "@/components/Buttons/BasicButton";
 import { Progress } from "@/components/ui/progress";
+import { Pie, Bar } from "react-chartjs-2";
+import {
+  Chart as ChartJS,
+  ArcElement,
+  Tooltip,
+  Legend,
+  Colors,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+} from "chart.js";
+ChartJS.register(
+  ArcElement,
+  Tooltip,
+  Legend,
+  Colors,
+  CategoryScale,
+  LinearScale,
+  BarElement
+);
 
 // Import hooks
 import { useSession } from "@/hooks/authentication/useSession";
@@ -618,7 +638,41 @@ export default function Profile({ params }: { params: { id: string } }) {
 
 function UserProfile(data: any) {
   // States
-  console.log(data);
+  const [barData, setBarData] = useState<any>(null);
+  const [barSettings, setBarSettings] = useState<any>(null);
+
+  // useEffects
+  useEffect(() => {
+    if (data?.callouts) {
+      const roleData = countRoles(data.callouts.callouts);
+
+      const dataBar = {
+        labels: Object.keys(roleData).map(
+          (role: any) =>
+            `${role} (${formatMinutesToHoursAndMinutes(
+              roleData[role].totalTime
+            )})`
+        ),
+        datasets: [
+          {
+            data: Object.values(roleData).map((role: any) => role.count),
+          },
+        ],
+      };
+
+      const settings = {
+        indexAxis: "y" as const,
+        plugins: {
+          legend: {
+            display: false,
+          },
+        },
+      };
+
+      setBarData(dataBar);
+      setBarSettings(settings);
+    }
+  }, [data?.callouts]);
 
   // Functions
   const formatDateAndTime = (dateTimeString: any) => {
@@ -638,6 +692,38 @@ function UserProfile(data: any) {
     return `${hours}h ${remainingMinutes}m`;
   }
 
+  function countRoles(callouts: any) {
+    const roleData: any = {};
+
+    callouts.forEach((callout: any) => {
+      const role: any = callout.callout.role;
+
+      if (role !== null) {
+        if (!roleData[role]) {
+          roleData[role] = {
+            count: 0,
+            totalTime: 0,
+          };
+        }
+
+        const timeStartMillis = new Date(
+          callout.callout.date_start + " " + callout.callout.time_start
+        ).getTime();
+        const timeEndMillis = new Date(
+          callout.callout.date_end + " " + callout.callout.time_end
+        ).getTime();
+
+        const timeDifferenceMillis = timeEndMillis - timeStartMillis;
+        const timeDifferenceMinutes = timeDifferenceMillis / (1000 * 60);
+
+        roleData[role].count += 1;
+        roleData[role].totalTime += timeDifferenceMinutes;
+      }
+    });
+
+    return roleData;
+  }
+
   return (
     <div className="w-full mt-4">
       <div className="flex items-center flex-row gap-2 w-full">
@@ -652,11 +738,11 @@ function UserProfile(data: any) {
             value={parseFloat(
               data.activeProfile?.game_time_progress_percentage
             )}
-            className="mt-0 lg:mt-5"
+            className="mt-0 lg:mt-6"
           />
           <div className="flex flex-row w-full pl-5 pr-5 text-xs hidden lg:block">
             {/* Statistics */}
-            <div className="flex gap-2 justify-between mt-1">
+            <div className="flex gap-2 justify-between mt-2">
               <div className="">
                 Callouts all time: {data?.callouts?.countAllTime}
               </div>
@@ -695,7 +781,7 @@ function UserProfile(data: any) {
           {parseInt(data.activeProfile?.game_time_progress_percentage) + "%"}
         </div>
       </div>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-4">
         <div className=" col-span-1 lg:col-span-2">
           <div className="h-[300px] md:h-[600px] xl:h-[600px] mt-4">
             <MapCallouts
@@ -709,14 +795,14 @@ function UserProfile(data: any) {
             />
           </div>
         </div>
-        <div className="bg-white rounded-[20px] mt-4 mb-9 py-2 px-2">
+        <div className="bg-white rounded-[20px] mt-4 mb-9 py-4 px-6 ml-3">
           <div className="flex flex-col gap-2">
             <div className="font-semibold">Latest activity</div>
             {data.callouts?.callouts
-              .slice(0, 22) // Limit the array to the first 22 items
-              .map((callout: any) => {
+              .slice(0, 21) // Limit the array to the first 22 items
+              .map((callout: any, index: number) => {
                 return (
-                  <div className="text-xs flex flex-row gap-1">
+                  <div className="text-xs flex flex-row gap-1" key={index}>
                     {
                       formatDateAndTime(
                         callout.callout.date_start +
@@ -732,6 +818,17 @@ function UserProfile(data: any) {
           </div>
         </div>
       </div>
+      {barData !== null ? (
+        <div className="flex flex-col gap-2 px-6 bg-white py-10 rounded-[20px]">
+          <div className="font-semibold">Callout roles</div>
+          <div className="w-full h-auto">
+            <Bar
+              data={barData}
+              options={{ ...barSettings, barThickness: 40 }}
+            />
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

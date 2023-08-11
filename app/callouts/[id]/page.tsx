@@ -6,7 +6,7 @@ import { supabase } from "../../../app/supabase";
 
 // Import icons
 import {
-  Navigation2,
+  Aperture,
   Calendar,
   Navigation,
   Box,
@@ -211,7 +211,7 @@ function Dashboard(data: any) {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
         <FeaturedCard
           title="Date"
           icon={<Calendar />}
@@ -265,6 +265,19 @@ function Dashboard(data: any) {
           </div>
         </FeaturedCard>
         <FeaturedCard
+          title="Role"
+          icon={<Aperture />}
+          className={"rounded-[20px] bg-primary w-full"}
+        >
+          <div className="flex flex-col px-6">
+            <div className="flex flex-row">
+              <div className="">
+                {data.callout.role ? data.callout.role : "No role added yet"}
+              </div>
+            </div>
+          </div>
+        </FeaturedCard>
+        <FeaturedCard
           title="Weather"
           icon={<Sun />}
           className={"rounded-[20px] bg-primary w-full"}
@@ -296,7 +309,7 @@ function Dashboard(data: any) {
         </FeaturedCard>
       </div>
       {data.callout.description ? (
-        <div>
+        <div className="grid grid-cols-1 lg:grid-cols-1 gap-4">
           <FeaturedCard
             title="Description"
             icon={<PenTool />}
@@ -345,6 +358,8 @@ function Edit(data: any) {
   const [departmentTypes, setDepartmentTypes] = useState<any>();
   const [activeStation, setActiveStation] = useState<any>();
   const [allStations, setAllStations] = useState<any>();
+  const [activeRole, setActiveRole] = useState<any>(data.callout.role);
+  const [allRoles, setAllRoles] = useState<any>();
 
   // Auth
   const { session } = useSession();
@@ -440,7 +455,27 @@ function Edit(data: any) {
         }
       }
     }
+
+    async function fetchRoles() {
+      if (activeDepartment) {
+        const { data, error } = await supabase
+          .from("callout_roles")
+          .select(`*`)
+          .eq("department", activeDepartment?.id);
+
+        if (error) {
+          alert(
+            "There was an error when fetching your callout roles: " +
+              error.message
+          );
+        } else {
+          setAllRoles(data || null);
+        }
+      }
+    }
+
     fetchDepartmentCalloutTypes();
+    fetchRoles();
   }, [activeDepartment]);
 
   // Validation state
@@ -515,6 +550,7 @@ function Edit(data: any) {
           station: activeStation.id ? activeStation.id : null,
           exposed_to_smoke: exposedToSmoke,
           exposed_to_smoke_time: exposedToSmokeTime ? exposedToSmokeTime : null,
+          role: activeRole,
         })
         .eq("id", data.callout.id);
 
@@ -623,6 +659,23 @@ function Edit(data: any) {
           {formErrors.type && (
             <div className="text-danger">{formErrors.type}</div>
           )}
+        </div>
+        <div className="mb-4">
+          <label className="block text-primary font-semibold">Role</label>
+          <select
+            value={activeRole}
+            onChange={(e) => setActiveRole(e.target.value)}
+            className="w-full px-3 py-2 rounded-md border"
+          >
+            <option value="">Select Role</option>
+            {allRoles?.map((role: any) => {
+              return (
+                <option value={role.value} key={role.id}>
+                  {role.value}
+                </option>
+              );
+            })}
+          </select>
         </div>
         <div className="mb-4">
           <label className="block text-primary font-semibold">
