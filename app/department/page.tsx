@@ -1462,7 +1462,7 @@ function CreateNew() {
     if (data) {
       if (data.length > 0) {
         setNameError(true);
-        setNameErrorText("This name allready exists..");
+        setNameErrorText("This name already exists..");
         setDisableNext(true);
       } else if (nameError) {
         setNameError(false);
@@ -1689,7 +1689,7 @@ function JoinExisting() {
         );
       } else {
         if (dataDepartment.length > 0) {
-          // Check if the user is allready a part of that department
+          // Check if the user is already a part of that department
           const {
             data: dataDepartmentConnection,
             error: errorDepartmentConnection,
@@ -1709,7 +1709,7 @@ function JoinExisting() {
             console.log(dataDepartmentConnection);
             if (dataDepartmentConnection.length > 0) {
               setShowMessage(true);
-              setMessage("You are allready a part of this department");
+              setMessage("You are already a part of this department");
             } else {
               const {
                 data: dataConnectionDepartmentNew,

@@ -932,7 +932,7 @@ function CreateNew() {
     if (data) {
       if (data.length > 0) {
         setNameError(true);
-        setNameErrorText("This name allready exists..");
+        setNameErrorText("This name already exists..");
         setDisableNext(true);
       } else if (nameError) {
         setNameError(false);
@@ -1152,7 +1152,7 @@ function JoinExisting() {
         );
       } else {
         if (dataStation.length > 0) {
-          // Check if the user is allready a part of that station
+          // Check if the user is already a part of that station
           const { data: dataStationConnection, error: errorStationConnection } =
             await supabase
               .from("user_connection_station")
@@ -1170,7 +1170,7 @@ function JoinExisting() {
             console.log(dataStationConnection);
             if (dataStationConnection.length > 0) {
               setShowMessage(true);
-              setMessage("You are allready a part of this station");
+              setMessage("You are already a part of this station");
             } else {
               const {
                 data: dataConnectionStationNew,
