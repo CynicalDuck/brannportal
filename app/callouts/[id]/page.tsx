@@ -367,7 +367,7 @@ function Edit(data: any) {
   // Fetching
   async function fetchDeparments() {
     if (session) {
-      const { data, error } = await supabase
+      const { data: dataDepartment, error } = await supabase
         .from("user_connection_department")
         .select(
           `*,
@@ -381,11 +381,11 @@ function Edit(data: any) {
           "There was an error when fetching your departments: " + error.message
         );
       } else {
-        setActiveDepartment(data[0].department || null);
+        setActiveDepartment(data.callout.department || null);
 
         // Create a list of all departments
         let allDepartments: any = [];
-        data.forEach((connection) => {
+        dataDepartment.forEach((connection) => {
           allDepartments.push(connection.department);
         });
 
@@ -396,7 +396,7 @@ function Edit(data: any) {
 
   async function fetchStations() {
     if (session) {
-      const { data, error } = await supabase
+      const { data: dataStation, error } = await supabase
         .from("user_connection_station")
         .select(
           `*,
@@ -410,11 +410,11 @@ function Edit(data: any) {
           "There was an error when fetching your departments: " + error.message
         );
       } else {
-        setActiveStation(data[0].station || null);
+        setActiveStation(data.callout.station || null);
 
         // Create a list of all departments
         let allStations: any = [];
-        data.forEach((connection) => {
+        dataStation.forEach((connection) => {
           allStations.push(connection.station);
         });
 
@@ -432,6 +432,8 @@ function Edit(data: any) {
     const fetchStationData = async () => {
       const data = await fetchStations();
     };
+
+    // Fetch current station and department and set them as activeStation and activeDepartment
 
     fetchDepartmentsData();
     fetchStationData();
@@ -616,7 +618,7 @@ function Edit(data: any) {
         <div className="mb-4">
           <label className="block text-primary font-semibold">Station</label>
           <select
-            defaultValue={activeStation}
+            defaultValue={activeStation?.id}
             onChange={(e) => handleStationSelect(e.target.value)}
             className="w-full px-3 py-2 rounded-md border"
           >

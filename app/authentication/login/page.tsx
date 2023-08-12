@@ -131,7 +131,7 @@ export default function Login() {
   // Return
   if (signUp) {
     return (
-      <div className="flex justify-center w-full">
+      <div className="flex justify-center w-full md:1/2 lg:w-1/2">
         <div className="w-full md:1/2 lg:w-1/8">
           <FeaturedCard
             title="SIGN UP"

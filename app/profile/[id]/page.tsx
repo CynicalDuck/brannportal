@@ -460,16 +460,9 @@ export default function Profile({ params }: { params: { id: string } }) {
 
   // Return
   return (
-    <div className="flex flex-col gap-2 w-full">
-      <div className="text-primary text-4xl hidden lg:block">
-        {haveAccess
-          ? activeProfile?.name
-            ? activeProfile?.name
-            : "No username added"
-          : "You do not have access to this user profile"}
-      </div>
+    <div className="flex flex-col gap-2 w-full h-full">
       <div className="lg:flex lg:justify-end lg:grow lg:gap-2">
-        <div className="md:hidden">
+        <div className="md:hidden mb-4">
           <Select onValueChange={(e) => window.location.assign(e)}>
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Menu" />
@@ -490,6 +483,13 @@ export default function Profile({ params }: { params: { id: string } }) {
             </SelectContent>
           </Select>
         </div>
+      </div>
+      <div className="text-primary text-sm lg:text-4xl">
+        {haveAccess
+          ? activeProfile?.name
+            ? activeProfile?.name
+            : "No username added"
+          : "You do not have access to this user profile"}
       </div>
       <div className="flex flex-row gap-2 mt-5 text-xs">
         {session?.user?.id === activeProfile?.user ? (
@@ -529,9 +529,7 @@ export default function Profile({ params }: { params: { id: string } }) {
           >
             <div className="">
               <div className="flex flex-row gap-2">
-                <div className="hidden md:block">
-                  Cancel pending follow request
-                </div>
+                <div className="">Cancel pending follow request</div>
               </div>
             </div>
           </BasicButton>
