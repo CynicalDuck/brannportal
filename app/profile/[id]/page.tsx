@@ -724,20 +724,26 @@ function UserProfile(data: any) {
 
   return (
     <div className="w-full mt-4">
-      <div className="flex items-center flex-row gap-2 w-full">
-        <div className=" w-20 h-20 rounded-full bg-success text-white flex items-center justify-center">
-          <div className="flex flex-col items-center">
-            <div className="text-xs">level</div>
-            <div className="text-2xl">{data.activeProfile?.game_level}</div>
-          </div>
+      <div className="flex flex-col gap-1">
+        <div className="flex flex-row gap-2">
+          <div className="text-2xl">Level</div>
+          <div className="text-2xl">{data.activeProfile?.game_level}</div>
         </div>
         <div className="flex flex-col gap-0 w-full">
-          <Progress
-            value={parseFloat(
-              data.activeProfile?.game_time_progress_percentage
-            )}
-            className="mt-0 lg:mt-6"
-          />
+          <div className="flex flex-row gap-2 w-full">
+            <div className="text-xs w-full">
+              <Progress
+                value={parseFloat(
+                  data.activeProfile?.game_time_progress_percentage
+                )}
+                className=""
+              />
+            </div>
+            <div className="text-xs">
+              {parseInt(data.activeProfile?.game_time_progress_percentage) +
+                "%"}
+            </div>
+          </div>
           <div className="flex flex-row w-full pl-5 pr-5 text-xs hidden lg:block">
             {/* Statistics */}
             <div className="flex gap-2 justify-between mt-2">
@@ -774,9 +780,6 @@ function UserProfile(data: any) {
               </div>
             </div>
           </div>
-        </div>
-        <div className="text-xs">
-          {parseInt(data.activeProfile?.game_time_progress_percentage) + "%"}
         </div>
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-4">

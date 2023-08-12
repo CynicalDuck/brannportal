@@ -239,13 +239,8 @@ export default function Home() {
               >
                 <div className="flex flex-col px-6">
                   <div className="flex flex-row">
-                    <div className="text-3xl">
+                    <div className="text-4xl">
                       {formatTime(dataCallouts?.exposedToSmokeTime)}
-                    </div>
-                  </div>
-                  <div className="flex justify-between py-4">
-                    <div className="text-center mx-4">
-                      <div className="text-sm">time in smoke</div>
                     </div>
                   </div>
                 </div>
