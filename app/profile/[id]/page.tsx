@@ -460,7 +460,7 @@ export default function Profile({ params }: { params: { id: string } }) {
 
   // Return
   return (
-    <div className="flex flex-col gap-2 w-full h-full">
+    <div className="flex flex-col gap-2 w-full">
       <div className="lg:flex lg:justify-end lg:grow lg:gap-2">
         <div className="md:hidden mb-4">
           <Select onValueChange={(e) => window.location.assign(e)}>
