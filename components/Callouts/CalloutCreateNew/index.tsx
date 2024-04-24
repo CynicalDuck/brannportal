@@ -216,6 +216,7 @@ export default function CalloutCreateNew(setCreateNew: any) {
           station: activeStation.id ? activeStation.id : null,
           exposed_to_smoke: exposedToSmoke,
           exposed_to_smoke_time: exposedToSmokeTime ? exposedToSmokeTime : null,
+          role: activeRole ? activeRole : null,
         })
         .select();
 
