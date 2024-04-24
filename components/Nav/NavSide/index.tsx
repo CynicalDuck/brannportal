@@ -33,7 +33,7 @@ export default function NavSide({ children, ...props }: Props) {
         <div className="flex justify-center mb-2">
           <Image src={"/FireLogo.png"} alt="Test" width={40} height={40} />
         </div>
-        <a href="/" className="text-white hover:text-light ">
+        <a href="/" className="text-white hover:text-light">
           <Home className="mx-auto" />
         </a>
         <a href="/callouts" className="text-white hover:text-light">
@@ -62,14 +62,6 @@ export default function NavSide({ children, ...props }: Props) {
         >
           <LogOut className="mx-auto" />
         </a>
-        <div className="mt-auto mb-5">
-          <Avatar className="text-white">
-            <AvatarImage src="https://github.com/shadcn.png" />
-            <AvatarFallback>
-              <User />
-            </AvatarFallback>
-          </Avatar>
-        </div>
       </div>
     </div>
   );

@@ -23,6 +23,7 @@ import AutocompleteAddress from "@/components/Maps/Autocomplete";
 // Import hooks
 import { useSession } from "@/hooks/authentication/useSession";
 import { useFetchUserCallouts } from "@/hooks/fetch/useFetchUserCallouts";
+import { useFetchSingleDepartment } from "../../hooks/fetch/departments/useFetchDepartments";
 
 export default function Callouts() {
   // States
@@ -80,7 +81,6 @@ export default function Callouts() {
           </Select>
         </div>
       </div>
-      {/* Use flex-grow to let TableCallout take up remaining space */}
       <div className="flex-grow w-full">
         {!createNew && (
           <TableCallout
