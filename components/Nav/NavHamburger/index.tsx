@@ -12,7 +12,14 @@ import {
 
 export default function NavHamburger(appData: any) {
   // Get current path
-  const currentPath = window?.location.pathname;
+  let currentPath;
+
+  if (typeof window !== "undefined") {
+    currentPath = window.location.pathname;
+  } else {
+    // Define a fallback value or handle the case where window is not available
+    currentPath = ""; // Fallback value
+  }
 
   // Check path to determine wich menu item should be active
   const activePath =
