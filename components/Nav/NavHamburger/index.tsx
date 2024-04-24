@@ -11,31 +11,69 @@ import {
 } from "@/components/ui/select";
 
 export default function NavHamburger(appData: any) {
+  // Get current path
+  const currentPath = window?.location.pathname;
+
+  // Check path to determine wich menu item should be active
+  const activePath =
+    currentPath === "/"
+      ? "home"
+      : currentPath.startsWith("/callouts")
+      ? "callouts"
+      : currentPath.startsWith("/department")
+      ? "department"
+      : currentPath.startsWith("/station")
+      ? "station"
+      : currentPath.startsWith("/profile")
+      ? currentPath
+      : currentPath.startsWith("/settings")
+      ? "settings"
+      : currentPath.startsWith("/authentication")
+      ? "authentication/logout"
+      : null;
+
   return (
-    <div className="lg:flex lg:justify-end lg:grow lg:gap-2">
-      <div className="md:hidden">
-        <Select onValueChange={(e) => window.location.assign(e)}>
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Menu" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectGroup>
-              <SelectLabel>Pages</SelectLabel>
-              <SelectItem value="home" disabled>
-                Home
-              </SelectItem>
-              <SelectItem value="callouts">Callouts</SelectItem>
-              <SelectItem value="department">Department</SelectItem>
-              <SelectItem value="station">Station</SelectItem>
-              <SelectItem value={"profile/" + appData.session?.user?.id}>
-                Profile
-              </SelectItem>
-              <SelectItem value="settings">Settings</SelectItem>
-              <SelectItem value="authentication/logout">Sign out</SelectItem>
-            </SelectGroup>
-          </SelectContent>
-        </Select>
-      </div>
+    <div className="md:hidden">
+      <Select onValueChange={(e) => window.location.assign(e)}>
+        <SelectTrigger className="w-full">
+          <SelectValue placeholder="Menu" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectGroup>
+            <SelectLabel>Pages</SelectLabel>
+            <SelectItem value="/" disabled={activePath === "/"}>
+              Home
+            </SelectItem>
+            <SelectItem value="callouts" disabled={activePath === "callouts"}>
+              Callouts
+            </SelectItem>
+            <SelectItem
+              value="department"
+              disabled={activePath === "department"}
+            >
+              Department
+            </SelectItem>
+            <SelectItem value="station" disabled={activePath === "station"}>
+              Station
+            </SelectItem>
+            <SelectItem
+              value={"profile/" + appData.session?.user?.id}
+              disabled={activePath === "profile"}
+            >
+              Profile
+            </SelectItem>
+            <SelectItem value="settings" disabled={activePath === "settings"}>
+              Settings
+            </SelectItem>
+            <SelectItem
+              value="authentication/logout"
+              disabled={activePath === "authentication/logout"}
+            >
+              Sign out
+            </SelectItem>
+          </SelectGroup>
+        </SelectContent>
+      </Select>
     </div>
   );
 }
